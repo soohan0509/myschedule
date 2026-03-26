@@ -167,13 +167,25 @@ async function renderCalendar() {
   const startDate = `${currentYear}-${pad(currentMonth + 1)}-01`;
   const endDate = `${currentYear}-${pad(currentMonth + 1)}-${daysInMonth}`;
 
-  const { data: schedules } = await supabase
-    .from('schedules').select('date, type')
-    .eq('class_num', currentClass)
-    .gte('date', startDate).lte('date', endDate);
+  const [{ data: schedules }, { data: memberRows }] = await Promise.all([
+    supabase.from('schedules').select('date, type').eq('class_num', currentClass).gte('date', startDate).lte('date', endDate),
+    supabase.from('group_members').select('schedule_id').eq('user_id', profile.id).eq('status', 'accepted')
+  ]);
+
+  // 수락한 그룹 일정 중 다른 반 것도 점으로 표시
+  let acceptedDots = [];
+  const acceptedIds = (memberRows || []).map(m => m.schedule_id);
+  if (acceptedIds.length > 0) {
+    const { data: groupSched } = await supabase
+      .from('schedules').select('date, type')
+      .in('id', acceptedIds)
+      .neq('class_num', currentClass)
+      .gte('date', startDate).lte('date', endDate);
+    acceptedDots = groupSched || [];
+  }
 
   const dotMap = {};
-  (schedules || []).forEach(s => {
+  [...(schedules || []), ...acceptedDots].forEach(s => {
     if (!dotMap[s.date]) dotMap[s.date] = [];
     dotMap[s.date].push(s.type);
   });
@@ -249,10 +261,23 @@ async function showDateDetail(date) {
   const [m, d] = [date.slice(5, 7), date.slice(8, 10)];
   panel.innerHTML = `<h3>${parseInt(m)}월 ${parseInt(d)}일</h3><p style="color:var(--text-muted);font-size:0.83rem">불러오는 중...</p>`;
 
-  const [subjectMap, { data: schedules }] = await Promise.all([
+  const [subjectMap, { data: classSchedules }, { data: memberRows }] = await Promise.all([
     fetchTimetable(currentClass, date),
-    supabase.from('schedules').select('*, attachments(*)').eq('class_num', currentClass).eq('date', date)
+    supabase.from('schedules').select('*, attachments(*)').eq('class_num', currentClass).eq('date', date),
+    supabase.from('group_members').select('schedule_id').eq('user_id', profile.id).eq('status', 'accepted')
   ]);
+
+  // 수락한 그룹 일정 중 다른 반 것도 포함
+  let schedules = classSchedules || [];
+  const acceptedIds = (memberRows || []).map(m => m.schedule_id);
+  if (acceptedIds.length > 0) {
+    const { data: groupSched } = await supabase
+      .from('schedules').select('*, attachments(*)')
+      .in('id', acceptedIds)
+      .eq('date', date)
+      .neq('class_num', currentClass);
+    schedules = [...schedules, ...(groupSched || [])];
+  }
 
   panel.innerHTML = `<h3>${parseInt(m)}월 ${parseInt(d)}일</h3>`;
 
