@@ -174,24 +174,24 @@ async function renderCalendar() {
 
   const dotMap = {};
   (schedules || []).forEach(s => {
-    if (!dotMap[s.date]) dotMap[s.date] = new Set();
-    dotMap[s.date].add(s.type);
+    if (!dotMap[s.date]) dotMap[s.date] = [];
+    dotMap[s.date].push(s.type);
   });
   // 내 일과 점 표시
   routines.forEach(r => {
     if ((r.repeat_type || 'specific') === 'specific') {
       (r.specific_dates || []).forEach(d => {
         if (d >= startDate && d <= endDate) {
-          if (!dotMap[d]) dotMap[d] = new Set();
-          dotMap[d].add('routine');
+          if (!dotMap[d]) dotMap[d] = [];
+          dotMap[d].push('routine');
         }
       });
     } else {
       for (let day = 1; day <= daysInMonth; day++) {
         const d = `${currentYear}-${pad(currentMonth + 1)}-${pad(day)}`;
         if (isRoutineActive(r, d)) {
-          if (!dotMap[d]) dotMap[d] = new Set();
-          dotMap[d].add('routine');
+          if (!dotMap[d]) dotMap[d] = [];
+          dotMap[d].push('routine');
         }
       }
     }
