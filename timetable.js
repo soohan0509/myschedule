@@ -69,7 +69,8 @@ function timeToMinutes(t) {
   return (h === 0 ? 1440 : h * 60) + (m || 0);
 }
 
-function getSlotStatus(startStr, endStr, isToday) {
+function getSlotStatus(startStr, endStr, isToday, isPast) {
+  if (isPast) return 'past';
   if (!isToday || !startStr) return 'future';
   const now = new Date();
   const nowMin = now.getHours() * 60 + now.getMinutes();
@@ -86,6 +87,7 @@ export function renderTimetable(subjectMap, schedules, routines, date, classNum,
   const slots = getSlotsForDate(date);
   const todayStr = new Date().toISOString().slice(0, 10);
   const isToday = date === todayStr;
+  const isPast = date < todayStr;
 
   const ul = document.createElement('ul');
   ul.className = 'timetable-list';
@@ -117,7 +119,7 @@ export function renderTimetable(subjectMap, schedules, routines, date, classNum,
         `<span class="slot-badge badge-${s.type}">${s.title}</span>`
       ).join('');
       const [startStr, endStr] = time.split('~');
-      const status = getSlotStatus(startStr, endStr, isToday);
+      const status = getSlotStatus(startStr, endStr, isToday, isPast);
       li.className = 'timetable-slot' + (isMyClass ? ' clickable' : '') + (status === 'past' ? ' slot-past' : status === 'current' ? ' slot-current' : '');
       li.innerHTML = `
         <div class="slot-label">${label}<span style="color:var(--text-muted);font-size:0.72rem;margin-left:6px">${time}</span></div>
@@ -126,7 +128,7 @@ export function renderTimetable(subjectMap, schedules, routines, date, classNum,
       if (isMyClass) li.addEventListener('click', () => onSlotClick(key, label, time));
     } else {
       const r = item.data;
-      const status = getSlotStatus(r.start_time, r.end_time, isToday);
+      const status = getSlotStatus(r.start_time, r.end_time, isToday, isPast);
       li.className = 'timetable-slot routine-slot' + (status === 'past' ? ' slot-past' : status === 'current' ? ' slot-current' : '');
       li.innerHTML = `
         <div class="slot-label" style="color:#7C3AED">📋 내 일과<span style="color:var(--text-muted);font-size:0.72rem;margin-left:6px">${r.start_time}~${r.end_time}</span></div>
