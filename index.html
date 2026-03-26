@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>경기북과학고 1학년 일정</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <script src="env.js"></script>
+  <div class="auth-container">
+    <div class="auth-card">
+      <h1>🏫 경기북과학고 1학년</h1>
+      <p class="subtitle" id="auth-subtitle">로그인하여 반 일정을 확인하세요</p>
+
+      <!-- 로그인 폼 -->
+      <form id="login-form">
+        <div class="form-group">
+          <label>반</label>
+          <select id="login-class" required>
+            <option value="">반 선택</option>
+            <option value="1">1반</option>
+            <option value="2">2반</option>
+            <option value="3">3반</option>
+            <option value="4">4반</option>
+            <option value="5">5반</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>번호</label>
+          <input type="number" id="login-seat" placeholder="출석 번호" min="1" max="50" required>
+        </div>
+        <div class="form-group">
+          <label>비밀번호</label>
+          <input type="password" id="login-password" required>
+        </div>
+        <p class="error-msg" id="login-error"></p>
+        <button type="submit" class="btn btn-primary" style="margin-top:8px">로그인</button>
+      </form>
+
+      <!-- 회원가입 폼 -->
+      <form id="signup-form" style="display:none">
+        <div class="form-group">
+          <label>이름 (실명)</label>
+          <input type="text" id="signup-name" placeholder="홍길동" required>
+        </div>
+        <div class="form-group">
+          <label>반</label>
+          <select id="signup-class" required>
+            <option value="">반 선택</option>
+            <option value="1">1반</option>
+            <option value="2">2반</option>
+            <option value="3">3반</option>
+            <option value="4">4반</option>
+            <option value="5">5반</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>번호</label>
+          <input type="number" id="signup-seat" placeholder="출석 번호" min="1" max="50" required>
+        </div>
+        <div class="form-group">
+          <label>비밀번호</label>
+          <input type="password" id="signup-password" placeholder="6자 이상" required>
+        </div>
+        <div class="form-group">
+          <label>비밀번호 확인</label>
+          <input type="password" id="signup-password-confirm" required>
+        </div>
+        <p class="error-msg" id="signup-error"></p>
+        <button type="submit" class="btn btn-primary" style="margin-top:8px">회원가입</button>
+      </form>
+
+      <div class="auth-toggle">
+        <span id="toggle-text">계정이 없으신가요?</span>
+        <a id="toggle-btn"> 회원가입</a>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { supabase } from './app.js';
+
+    // 이미 로그인 시 캘린더로
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) window.location.href = 'calendar.html';
+    });
+
+    let isLogin = true;
+
+    document.getElementById('toggle-btn').addEventListener('click', () => {
+      isLogin = !isLogin;
+      document.getElementById('login-form').style.display = isLogin ? '' : 'none';
+      document.getElementById('signup-form').style.display = isLogin ? 'none' : '';
+      document.getElementById('auth-subtitle').textContent = isLogin
+        ? '로그인하여 반 일정을 확인하세요'
+        : '계정을 만들어 시작하세요';
+      document.getElementById('toggle-text').textContent = isLogin ? '계정이 없으신가요?' : '이미 계정이 있으신가요?';
+      document.getElementById('toggle-btn').textContent = isLogin ? ' 회원가입' : ' 로그인';
+    });
+
+    // 로그인 (반+번호 조합으로 이메일 생성)
+    document.getElementById('login-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const classNum = document.getElementById('login-class').value;
+      const seatNum = document.getElementById('login-seat').value;
+      const password = document.getElementById('login-password').value;
+      const errEl = document.getElementById('login-error');
+      errEl.classList.remove('show');
+
+      if (!classNum) { errEl.textContent = '반을 선택해주세요.'; errEl.classList.add('show'); return; }
+
+      const email = `c${classNum}n${seatNum}@gbs.kr`;
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) {
+        errEl.textContent = '이름 또는 비밀번호가 올바르지 않습니다.';
+        errEl.classList.add('show');
+      } else {
+        window.location.href = 'calendar.html';
+      }
+    });
+
+    // 회원가입
+    document.getElementById('signup-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const name = document.getElementById('signup-name').value.trim();
+      const classNum = parseInt(document.getElementById('signup-class').value);
+      const seatNum = parseInt(document.getElementById('signup-seat').value);
+      const password = document.getElementById('signup-password').value;
+      const confirm = document.getElementById('signup-password-confirm').value;
+      const errEl = document.getElementById('signup-error');
+      errEl.classList.remove('show');
+
+      if (!classNum) { errEl.textContent = '반을 선택해주세요.'; errEl.classList.add('show'); return; }
+      if (password !== confirm) { errEl.textContent = '비밀번호가 일치하지 않습니다.'; errEl.classList.add('show'); return; }
+      if (password.length < 6) { errEl.textContent = '비밀번호는 6자 이상이어야 합니다.'; errEl.classList.add('show'); return; }
+
+      const email = `c${classNum}n${seatNum}@gbs.kr`;
+      const { data, error } = await supabase.auth.signUp({ email, password });
+
+      if (error) {
+        errEl.textContent = '가입 실패: ' + (error.message.includes('already') ? '이미 사용 중인 이름입니다.' : error.message);
+        errEl.classList.add('show');
+        return;
+      }
+
+      const { error: profileError } = await supabase.from('profiles').insert({
+        id: data.user.id,
+        name,
+        class_num: classNum,
+        seat_num: seatNum
+      });
+
+      if (profileError) {
+        errEl.textContent = '프로필 저장 실패: ' + profileError.message;
+        errEl.classList.add('show');
+        return;
+      }
+
+      window.location.href = 'calendar.html';
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>경기북과학고 1학년 일정</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <script src="env.js"></script>
+
+  <!-- 헤더 -->
+  <header class="app-header">
+    <h1>🏫 경기북과학고 1학년 일정</h1>
+    <div class="header-right">
+      <span class="user-info" id="user-info"></span>
+      <div style="position:relative">
+        <button class="notification-btn" id="notif-btn" title="알림">
+          🔔<span class="notif-badge" id="notif-badge">0</span>
+        </button>
+        <div class="notif-dropdown" id="notif-dropdown">
+          <div class="notif-header">알림</div>
+          <div id="notif-list"><div class="notif-empty">새 알림이 없습니다</div></div>
+        </div>
+      </div>
+      <button class="btn btn-primary btn-sm" id="logout-btn">로그아웃</button>
+    </div>
+  </header>
+
+  <!-- 반 탭 -->
+  <div class="class-tabs" id="class-tabs">
+    <div class="tab" data-class="1">1반</div>
+    <div class="tab" data-class="2">2반</div>
+    <div class="tab" data-class="3">3반</div>
+    <div class="tab" data-class="4">4반</div>
+    <div class="tab" data-class="5">5반</div>
+  </div>
+
+  <!-- 메인 콘텐츠 -->
+  <div class="main-content">
+    <div class="calendar-section">
+      <div class="calendar-nav">
+        <button class="nav-btn" id="prev-month">◀</button>
+        <h2 id="month-title"></h2>
+        <button class="nav-btn" id="next-month">▶</button>
+      </div>
+      <div class="calendar-grid" id="calendar-grid"></div>
+    </div>
+    <div class="detail-panel">
+      <div class="detail-card" id="detail-card">
+        <p style="color:var(--text-muted);font-size:0.9rem">날짜를 클릭하면<br>시간표와 일정이 표시됩니다.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- 일정 추가 모달 -->
+  <div class="modal-overlay" id="modal">
+    <div class="modal">
+      <h3 id="modal-heading">일정 추가</h3>
+      <div class="type-selector">
+        <div class="type-btn active" data-type="class">📢 반 전체</div>
+        <div class="type-btn" data-type="personal">🔒 개인</div>
+        <div class="type-btn" data-type="group">👥 그룹</div>
+      </div>
+      <div id="group-section" style="display:none">
+        <p style="font-size:0.8rem;color:var(--text-muted);margin-bottom:6px">그룹 멤버 선택 (같은 반)</p>
+        <div class="member-list" id="member-list"></div>
+      </div>
+      <div class="form-group">
+        <label>제목</label>
+        <input type="text" id="modal-title-input" placeholder="일정 제목" required>
+      </div>
+      <div class="form-group">
+        <label>세부 정보 (시간, 장소 등)</label>
+        <textarea id="modal-detail" rows="3" placeholder="세부 내용 입력..."></textarea>
+      </div>
+      <div class="file-input-area" id="file-drop">
+        📎 파일 또는 사진 첨부 (클릭)
+        <input type="file" id="file-input" style="display:none" multiple>
+      </div>
+      <div class="file-list" id="file-list"></div>
+      <div class="modal-actions">
+        <button class="btn btn-secondary" id="modal-cancel">취소</button>
+        <button class="btn btn-primary" id="modal-submit">저장</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 일과 추가 모달 -->
+  <div class="modal-overlay" id="routine-modal">
+    <div class="modal">
+      <h3>📋 일과 추가</h3>
+      <div class="form-group">
+        <label>제목</label>
+        <input type="text" id="routine-title" placeholder="예: 개인 운동, 독서 등">
+      </div>
+      <div style="display:flex;gap:12px">
+        <div class="form-group" style="flex:1">
+          <label>시작 시간</label>
+          <input type="time" id="routine-start">
+        </div>
+        <div class="form-group" style="flex:1">
+          <label>종료 시간</label>
+          <input type="time" id="routine-end">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>날짜 선택 <span id="routine-selected-count" style="color:var(--primary);font-size:0.8rem"></span></label>
+        <div class="mini-cal">
+          <div class="mini-cal-nav">
+            <button type="button" id="mini-prev">◀</button>
+            <span id="mini-month-title"></span>
+            <button type="button" id="mini-next">▶</button>
+          </div>
+          <div class="mini-cal-grid" id="mini-cal-grid"></div>
+        </div>
+      </div>
+      <p class="error-msg" id="routine-error"></p>
+      <div class="modal-actions">
+        <button class="btn btn-secondary" id="routine-cancel">취소</button>
+        <button class="btn btn-primary" id="routine-submit">저장</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="calendar.js"></script>
+</body>
+</html>
