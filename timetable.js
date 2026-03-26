@@ -69,10 +69,23 @@ function timeToMinutes(t) {
   return (h === 0 ? 1440 : h * 60) + (m || 0);
 }
 
+function getSlotStatus(startStr, endStr, isToday) {
+  if (!isToday || !startStr) return 'future';
+  const now = new Date();
+  const nowMin = now.getHours() * 60 + now.getMinutes();
+  const startMin = timeToMinutes(startStr);
+  const endMin = endStr ? timeToMinutes(endStr) : 9999;
+  if (nowMin >= startMin && nowMin < endMin) return 'current';
+  if (nowMin >= endMin) return 'past';
+  return 'future';
+}
+
 export function renderTimetable(subjectMap, schedules, routines, date, classNum, myClassNum, onSlotClick) {
   const container = document.createDocumentFragment();
   const isMyClass = classNum === myClassNum;
   const slots = getSlotsForDate(date);
+  const todayStr = new Date().toISOString().slice(0, 10);
+  const isToday = date === todayStr;
 
   const ul = document.createElement('ul');
   ul.className = 'timetable-list';
@@ -103,7 +116,9 @@ export function renderTimetable(subjectMap, schedules, routines, date, classNum,
       const badges = slotSchedules.map(s =>
         `<span class="slot-badge badge-${s.type}">${s.title}</span>`
       ).join('');
-      li.className = 'timetable-slot' + (isMyClass ? ' clickable' : '');
+      const [startStr, endStr] = time.split('~');
+      const status = getSlotStatus(startStr, endStr, isToday);
+      li.className = 'timetable-slot' + (isMyClass ? ' clickable' : '') + (status === 'past' ? ' slot-past' : status === 'current' ? ' slot-current' : '');
       li.innerHTML = `
         <div class="slot-label">${label}<span style="color:var(--text-muted);font-size:0.72rem;margin-left:6px">${time}</span></div>
         <div class="slot-subject">${subject}${badges}</div>
@@ -111,7 +126,8 @@ export function renderTimetable(subjectMap, schedules, routines, date, classNum,
       if (isMyClass) li.addEventListener('click', () => onSlotClick(key, label, time));
     } else {
       const r = item.data;
-      li.className = 'timetable-slot routine-slot';
+      const status = getSlotStatus(r.start_time, r.end_time, isToday);
+      li.className = 'timetable-slot routine-slot' + (status === 'past' ? ' slot-past' : status === 'current' ? ' slot-current' : '');
       li.innerHTML = `
         <div class="slot-label" style="color:#7C3AED">📋 내 일과<span style="color:var(--text-muted);font-size:0.72rem;margin-left:6px">${r.start_time}~${r.end_time}</span></div>
         <div class="slot-subject" style="display:flex;justify-content:space-between;align-items:center">

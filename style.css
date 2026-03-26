@@ -146,6 +146,11 @@ body { font-family: 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif; backgrou
 .mini-cal-day.selected { background:#7C3AED;color:white;font-weight:700; }
 .mini-cal-day.other-month { color:var(--border);pointer-events:none; }
 .routine-slot { border-left:3px solid #7C3AED !important; }
+.slot-past { opacity: 0.38; }
+.slot-past .slot-subject { color: var(--text-muted); }
+.slot-current { background: #EFF6FF !important; border-color: var(--primary) !important; border-left: 3px solid var(--primary) !important; }
+.slot-current .slot-label { color: var(--primary); font-weight: 700; }
+.slot-current .slot-subject { color: var(--text); font-weight: 700; }
 .routine-delete-menu { position:absolute;right:0;top:28px;background:white;border:1px solid var(--border);border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,0.12);z-index:50;overflow:hidden;min-width:130px; }
 .rdm-btn { display:block;width:100%;padding:9px 14px;border:none;background:none;cursor:pointer;font-size:0.83rem;text-align:left;transition:background 0.15s; }
 .rdm-btn:hover { background:var(--bg); }
