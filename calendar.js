@@ -21,6 +21,7 @@ async function init() {
   if (!profile) { window.location.href = 'index.html'; return; }
 
   document.getElementById('user-info').textContent = `${profile.class_num}반 ${profile.seat_num}번 ${profile.name}`;
+  if (profile.is_admin) document.getElementById('admin-btn').style.display = '';
   currentClass = profile.class_num;
 
   const now = new Date();

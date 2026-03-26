@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>어드민 - 경기북과학고 1학년</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .admin-wrap { max-width: 900px; margin: 0 auto; padding: 24px; }
+    .admin-title { font-size: 1.2rem; font-weight: 700; margin-bottom: 20px; }
+    .filter-bar { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+    .filter-bar select, .filter-bar input {
+      padding: 8px 12px; border: 1px solid var(--border); border-radius: 8px;
+      font-size: 0.9rem; outline: none;
+    }
+    .filter-bar input { flex: 1; min-width: 160px; }
+    .member-table { width: 100%; border-collapse: collapse; background: var(--card); border-radius: 12px; overflow: hidden; box-shadow: var(--shadow); }
+    .member-table th { background: var(--bg); padding: 11px 14px; text-align: left; font-size: 0.82rem; font-weight: 700; color: var(--text-muted); border-bottom: 1px solid var(--border); }
+    .member-table td { padding: 11px 14px; font-size: 0.88rem; border-bottom: 1px solid var(--border); }
+    .member-table tr:last-child td { border-bottom: none; }
+    .member-table tr:hover td { background: #F8FAFC; }
+    .badge-admin { background: #EDE9FE; color: #5B21B6; padding: 2px 8px; border-radius: 999px; font-size: 0.72rem; font-weight: 700; }
+    .btn-edit { padding: 4px 12px; background: var(--primary); color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 0.78rem; font-weight: 600; }
+    .btn-edit:hover { background: var(--primary-dark); }
+    .count-info { font-size: 0.83rem; color: var(--text-muted); margin-bottom: 10px; }
+
+    /* 편집 모달 */
+    .edit-modal .form-group { margin-bottom: 12px; }
+    .edit-modal label { display: block; font-size: 0.83rem; font-weight: 600; margin-bottom: 4px; }
+    .edit-modal input, .edit-modal select {
+      width: 100%; padding: 9px 12px; border: 1px solid var(--border);
+      border-radius: 8px; font-size: 0.9rem; outline: none;
+    }
+    .edit-modal input:focus, .edit-modal select:focus { border-color: var(--primary); }
+  </style>
+</head>
+<body>
+  <script src="env.js"></script>
+
+  <header class="app-header">
+    <h1>어드민 패널</h1>
+    <div class="header-right">
+      <span class="user-info" id="user-info"></span>
+      <a href="calendar.html" class="btn btn-secondary btn-sm">← 캘린더로</a>
+      <button class="btn btn-primary btn-sm" id="logout-btn">로그아웃</button>
+    </div>
+  </header>
+
+  <div class="admin-wrap">
+    <div class="admin-title">회원 관리</div>
+
+    <div class="filter-bar">
+      <select id="filter-class">
+        <option value="">전체 반</option>
+        <option value="1">1반</option>
+        <option value="2">2반</option>
+        <option value="3">3반</option>
+        <option value="4">4반</option>
+        <option value="5">5반</option>
+      </select>
+      <input type="text" id="filter-name" placeholder="이름 검색...">
+    </div>
+
+    <div class="count-info" id="count-info"></div>
+
+    <table class="member-table">
+      <thead>
+        <tr>
+          <th>반</th>
+          <th>번호</th>
+          <th>이름</th>
+          <th>권한</th>
+          <th>가입일</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody id="member-tbody"></tbody>
+    </table>
+  </div>
+
+  <!-- 편집 모달 -->
+  <div class="modal-overlay" id="edit-modal">
+    <div class="modal edit-modal">
+      <h3>회원 정보 수정</h3>
+      <input type="hidden" id="edit-id">
+      <div class="form-group">
+        <label>이름</label>
+        <input type="text" id="edit-name">
+      </div>
+      <div class="form-group">
+        <label>반</label>
+        <select id="edit-class">
+          <option value="1">1반</option>
+          <option value="2">2반</option>
+          <option value="3">3반</option>
+          <option value="4">4반</option>
+          <option value="5">5반</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>번호</label>
+        <input type="number" id="edit-seat" min="1" max="50">
+      </div>
+      <div class="form-group">
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+          <input type="checkbox" id="edit-admin" style="width:auto"> 어드민 권한
+        </label>
+      </div>
+      <p class="error-msg" id="edit-error"></p>
+      <div class="modal-actions">
+        <button class="btn btn-secondary" id="edit-cancel">취소</button>
+        <button class="btn btn-primary" id="edit-save">저장</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { supabase, requireAuth, getProfile } from './app.js';
+
+    const ok = await requireAuth();
+    if (!ok) window.location.href = 'index.html';
+
+    const profile = await getProfile();
+    if (!profile || !profile.is_admin) {
+      alert('어드민 권한이 없습니다.');
+      window.location.href = 'calendar.html';
+    }
+
+    document.getElementById('user-info').textContent = `${profile.class_num}반 ${profile.seat_num}번 ${profile.name}`;
+    document.getElementById('logout-btn').addEventListener('click', async () => {
+      await supabase.auth.signOut();
+      window.location.href = 'index.html';
+    });
+
+    let allMembers = [];
+
+    async function loadMembers() {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('id, name, class_num, seat_num, is_admin, created_at')
+        .order('class_num')
+        .order('seat_num');
+
+      if (error) { console.error(error); return; }
+      allMembers = data;
+      renderTable(allMembers);
+    }
+
+    function renderTable(members) {
+      document.getElementById('count-info').textContent = `총 ${members.length}명`;
+      const tbody = document.getElementById('member-tbody');
+      tbody.innerHTML = '';
+
+      if (members.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--text-muted);padding:24px">검색 결과 없음</td></tr>';
+        return;
+      }
+
+      members.forEach(m => {
+        const tr = document.createElement('tr');
+        const date = m.created_at ? new Date(m.created_at).toLocaleDateString('ko-KR') : '-';
+        tr.innerHTML = `
+          <td>${m.class_num}반</td>
+          <td>${m.seat_num}번</td>
+          <td>${m.name}</td>
+          <td>${m.is_admin ? '<span class="badge-admin">어드민</span>' : '-'}</td>
+          <td>${date}</td>
+          <td><button class="btn-edit" data-id="${m.id}">수정</button></td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      tbody.querySelectorAll('.btn-edit').forEach(btn => {
+        btn.addEventListener('click', () => openEdit(btn.dataset.id));
+      });
+    }
+
+    function applyFilter() {
+      const cls = document.getElementById('filter-class').value;
+      const name = document.getElementById('filter-name').value.trim();
+      let filtered = allMembers;
+      if (cls) filtered = filtered.filter(m => String(m.class_num) === cls);
+      if (name) filtered = filtered.filter(m => m.name.includes(name));
+      renderTable(filtered);
+    }
+
+    document.getElementById('filter-class').addEventListener('change', applyFilter);
+    document.getElementById('filter-name').addEventListener('input', applyFilter);
+
+    function openEdit(id) {
+      const m = allMembers.find(x => x.id === id);
+      if (!m) return;
+      document.getElementById('edit-id').value = m.id;
+      document.getElementById('edit-name').value = m.name;
+      document.getElementById('edit-class').value = m.class_num;
+      document.getElementById('edit-seat').value = m.seat_num;
+      document.getElementById('edit-admin').checked = !!m.is_admin;
+      document.getElementById('edit-error').classList.remove('show');
+      document.getElementById('edit-modal').classList.add('open');
+    }
+
+    document.getElementById('edit-cancel').addEventListener('click', () => {
+      document.getElementById('edit-modal').classList.remove('open');
+    });
+    document.getElementById('edit-modal').addEventListener('click', e => {
+      if (e.target === document.getElementById('edit-modal'))
+        document.getElementById('edit-modal').classList.remove('open');
+    });
+
+    document.getElementById('edit-save').addEventListener('click', async () => {
+      const id = document.getElementById('edit-id').value;
+      const name = document.getElementById('edit-name').value.trim();
+      const class_num = parseInt(document.getElementById('edit-class').value);
+      const seat_num = parseInt(document.getElementById('edit-seat').value);
+      const is_admin = document.getElementById('edit-admin').checked;
+      const errEl = document.getElementById('edit-error');
+
+      if (!name) { errEl.textContent = '이름을 입력해주세요.'; errEl.classList.add('show'); return; }
+      if (!seat_num || seat_num < 1 || seat_num > 50) { errEl.textContent = '번호는 1~50 사이여야 합니다.'; errEl.classList.add('show'); return; }
+
+      const { error } = await supabase.from('profiles')
+        .update({ name, class_num, seat_num, is_admin })
+        .eq('id', id);
+
+      if (error) { errEl.textContent = '저장 실패: ' + error.message; errEl.classList.add('show'); return; }
+
+      document.getElementById('edit-modal').classList.remove('open');
+      await loadMembers();
+    });
+
+    await loadMembers();
+  </script>
+</body>
+</html>
