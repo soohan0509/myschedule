@@ -1,5 +1,5 @@
 import { supabase, getProfile, requireAuth } from './app.js';
-import { fetchTimetable, renderTimetable } from './timetable.js';
+import { fetchTimetable, renderTimetable, isRoutineActive } from './timetable.js';
 
 let routines = [];
 let routineExceptions = [];
@@ -93,12 +93,22 @@ async function renderCalendar() {
   });
   // 내 일과 점 표시
   routines.forEach(r => {
-    (r.specific_dates || []).forEach(d => {
-      if (d >= startDate && d <= endDate) {
-        if (!dotMap[d]) dotMap[d] = new Set();
-        dotMap[d].add('routine');
+    if ((r.repeat_type || 'specific') === 'specific') {
+      (r.specific_dates || []).forEach(d => {
+        if (d >= startDate && d <= endDate) {
+          if (!dotMap[d]) dotMap[d] = new Set();
+          dotMap[d].add('routine');
+        }
+      });
+    } else {
+      for (let day = 1; day <= daysInMonth; day++) {
+        const d = `${currentYear}-${pad(currentMonth + 1)}-${pad(day)}`;
+        if (isRoutineActive(r, d)) {
+          if (!dotMap[d]) dotMap[d] = new Set();
+          dotMap[d].add('routine');
+        }
       }
-    });
+    }
   });
 
   for (let i = 0; i < firstDay; i++) {
@@ -313,9 +323,44 @@ function setupRoutineModal() {
     if (e.target.id === 'routine-modal') document.getElementById('routine-modal').classList.remove('open');
   });
   document.getElementById('routine-submit').addEventListener('click', submitRoutine);
+
+  // 반복 O/X
+  document.getElementById('rpt-no').addEventListener('click', () => {
+    repeatMode = 'no';
+    document.getElementById('rpt-no').classList.add('active');
+    document.getElementById('rpt-yes').classList.remove('active');
+    document.getElementById('specific-section').style.display = '';
+    document.getElementById('repeat-section').style.display = 'none';
+  });
+  document.getElementById('rpt-yes').addEventListener('click', () => {
+    repeatMode = 'yes';
+    document.getElementById('rpt-yes').classList.add('active');
+    document.getElementById('rpt-no').classList.remove('active');
+    document.getElementById('specific-section').style.display = 'none';
+    document.getElementById('repeat-section').style.display = '';
+  });
+
+  // 반복 간격
+  document.querySelectorAll('#interval-selector .type-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('#interval-selector .type-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      repeatInterval = btn.dataset.interval;
+      document.getElementById('weekday-section').style.display = repeatInterval === 'weekly' ? '' : 'none';
+    });
+  });
+
+  // 요일 토글
+  document.querySelectorAll('#weekday-section input[type=checkbox]').forEach(cb => {
+    cb.addEventListener('change', () => {
+      cb.closest('label').classList.toggle('active', cb.checked);
+    });
+  });
 }
 
 let miniCalYear, miniCalMonth, selectedDates = new Set();
+let repeatMode = 'no';   // 'no' | 'yes'
+let repeatInterval = 'daily'; // 'daily' | 'weekly' | 'monthly' | 'yearly'
 
 function openRoutineModal() {
   document.getElementById('routine-title').value = '';
@@ -323,6 +368,23 @@ function openRoutineModal() {
   document.getElementById('routine-end').value = '';
   document.getElementById('routine-error').classList.remove('show');
   selectedDates = new Set();
+  repeatMode = 'no';
+  repeatInterval = 'daily';
+
+  // UI 초기화
+  document.getElementById('rpt-no').classList.add('active');
+  document.getElementById('rpt-yes').classList.remove('active');
+  document.getElementById('specific-section').style.display = '';
+  document.getElementById('repeat-section').style.display = 'none';
+  document.getElementById('weekday-section').style.display = 'none';
+  document.querySelectorAll('#interval-selector .type-btn').forEach(b => b.classList.remove('active'));
+  document.querySelector('#interval-selector [data-interval="daily"]').classList.add('active');
+  document.querySelectorAll('#weekday-section input[type=checkbox]').forEach(cb => {
+    cb.checked = false;
+    cb.closest('label').classList.remove('active');
+  });
+  document.getElementById('routine-selected-count').textContent = '';
+
   const now = new Date();
   miniCalYear = now.getFullYear();
   miniCalMonth = now.getMonth();
@@ -381,21 +443,30 @@ async function submitRoutine() {
   const title = document.getElementById('routine-title').value.trim();
   const start = document.getElementById('routine-start').value;
   const end = document.getElementById('routine-end').value;
-  const dates = [...selectedDates];
   const errEl = document.getElementById('routine-error');
 
   if (!title) { errEl.textContent = '제목을 입력해주세요.'; errEl.classList.add('show'); return; }
   if (!start || !end) { errEl.textContent = '시작/종료 시간을 입력해주세요.'; errEl.classList.add('show'); return; }
   if (start >= end) { errEl.textContent = '종료 시간이 시작 시간보다 늦어야 합니다.'; errEl.classList.add('show'); return; }
-  if (dates.length === 0) { errEl.textContent = '날짜를 하나 이상 선택해주세요.'; errEl.classList.add('show'); return; }
 
-  const { error } = await supabase.from('routines').insert({
-    user_id: profile.id,
-    title,
-    start_time: start,
-    end_time: end,
-    specific_dates: dates
-  });
+  let insertData = { user_id: profile.id, title, start_time: start, end_time: end };
+
+  if (repeatMode === 'no') {
+    const dates = [...selectedDates];
+    if (dates.length === 0) { errEl.textContent = '날짜를 하나 이상 선택해주세요.'; errEl.classList.add('show'); return; }
+    insertData.repeat_type = 'specific';
+    insertData.specific_dates = dates;
+  } else {
+    if (repeatInterval === 'weekly') {
+      const days = [...document.querySelectorAll('#weekday-section input[type=checkbox]:checked')].map(cb => cb.value);
+      if (days.length === 0) { errEl.textContent = '요일을 하나 이상 선택해주세요.'; errEl.classList.add('show'); return; }
+      insertData.repeat_days = days;
+    }
+    insertData.repeat_type = repeatInterval;
+    insertData.repeat_start_date = new Date().toISOString().slice(0, 10);
+  }
+
+  const { error } = await supabase.from('routines').insert(insertData);
 
   if (error) { errEl.textContent = '저장 실패: ' + error.message; errEl.classList.add('show'); return; }
 

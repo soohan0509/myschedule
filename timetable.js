@@ -50,6 +50,18 @@ export async function fetchTimetable(classNum, date) {
   }
 }
 
+export function isRoutineActive(r, date) {
+  const type = r.repeat_type || 'specific';
+  if (type === 'specific') return (r.specific_dates || []).includes(date);
+  const DAY_KEYS = ['sun','mon','tue','wed','thu','fri','sat'];
+  const dow = DAY_KEYS[new Date(date + 'T00:00:00').getDay()];
+  if (type === 'daily') return true;
+  if (type === 'weekly') return (r.repeat_days || []).includes(dow);
+  if (type === 'monthly') return r.repeat_start_date && date.slice(8) === r.repeat_start_date.slice(8);
+  if (type === 'yearly') return r.repeat_start_date && date.slice(5) === r.repeat_start_date.slice(5);
+  return false;
+}
+
 function timeToMinutes(t) {
   if (!t) return 9999;
   const [h, m] = t.split(':').map(Number);
@@ -66,7 +78,7 @@ export function renderTimetable(subjectMap, schedules, routines, date, classNum,
   ul.className = 'timetable-list';
 
   // ── 슬롯 + 일과 합산 후 시간순 정렬 ──────────────
-  const todayRoutines = (routines || []).filter(r => (r.specific_dates || []).includes(date));
+  const todayRoutines = (routines || []).filter(r => isRoutineActive(r, date));
 
   const slotItems = slots.map(s => ({
     kind: 'slot',

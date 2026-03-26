@@ -105,14 +105,52 @@
         </div>
       </div>
       <div class="form-group">
-        <label>날짜 선택 <span id="routine-selected-count" style="color:var(--primary);font-size:0.8rem"></span></label>
-        <div class="mini-cal">
-          <div class="mini-cal-nav">
-            <button type="button" id="mini-prev">◀</button>
-            <span id="mini-month-title"></span>
-            <button type="button" id="mini-next">▶</button>
+        <label>반복</label>
+        <div class="type-selector">
+          <div class="type-btn active" id="rpt-no">✕ 안 함</div>
+          <div class="type-btn" id="rpt-yes">🔁 반복</div>
+        </div>
+      </div>
+
+      <!-- 반복 안 함: 날짜 직접 선택 -->
+      <div id="specific-section">
+        <div class="form-group">
+          <label>날짜 선택 <span id="routine-selected-count" style="color:var(--primary);font-size:0.8rem"></span></label>
+          <div class="mini-cal">
+            <div class="mini-cal-nav">
+              <button type="button" id="mini-prev">◀</button>
+              <span id="mini-month-title"></span>
+              <button type="button" id="mini-next">▶</button>
+            </div>
+            <div class="mini-cal-grid" id="mini-cal-grid"></div>
           </div>
-          <div class="mini-cal-grid" id="mini-cal-grid"></div>
+        </div>
+      </div>
+
+      <!-- 반복 설정 -->
+      <div id="repeat-section" style="display:none">
+        <div class="form-group">
+          <label>반복 간격</label>
+          <div class="type-selector" id="interval-selector">
+            <div class="type-btn active" data-interval="daily">1일</div>
+            <div class="type-btn" data-interval="weekly">1주</div>
+            <div class="type-btn" data-interval="monthly">1개월</div>
+            <div class="type-btn" data-interval="yearly">1년</div>
+          </div>
+        </div>
+        <div id="weekday-section" style="display:none">
+          <div class="form-group">
+            <label>요일 선택</label>
+            <div style="display:flex;gap:6px;flex-wrap:wrap">
+              <label class="type-btn" style="flex:none;cursor:pointer"><input type="checkbox" value="mon" style="display:none"> 월</label>
+              <label class="type-btn" style="flex:none;cursor:pointer"><input type="checkbox" value="tue" style="display:none"> 화</label>
+              <label class="type-btn" style="flex:none;cursor:pointer"><input type="checkbox" value="wed" style="display:none"> 수</label>
+              <label class="type-btn" style="flex:none;cursor:pointer"><input type="checkbox" value="thu" style="display:none"> 목</label>
+              <label class="type-btn" style="flex:none;cursor:pointer"><input type="checkbox" value="fri" style="display:none"> 금</label>
+              <label class="type-btn" style="flex:none;cursor:pointer"><input type="checkbox" value="sat" style="display:none"> 토</label>
+              <label class="type-btn" style="flex:none;cursor:pointer"><input type="checkbox" value="sun" style="display:none"> 일</label>
+            </div>
+          </div>
         </div>
       </div>
       <p class="error-msg" id="routine-error"></p>
