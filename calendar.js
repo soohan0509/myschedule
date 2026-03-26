@@ -287,6 +287,25 @@ async function showDateDetail(date) {
     !routineExceptions.some(e => e.routine_id === r.id && e.exception_date === date)
   );
 
+  // 버튼 영역 (시간표 위에 표시)
+  const btnRow = document.createElement('div');
+  btnRow.style.cssText = 'display:flex;gap:8px;margin-bottom:14px;';
+  if (currentClass === profile.class_num) {
+    const addBtn = document.createElement('button');
+    addBtn.className = 'btn btn-primary';
+    addBtn.style.cssText = 'flex:1;padding:9px;font-size:0.85rem;';
+    addBtn.textContent = '+ 일정 추가';
+    addBtn.addEventListener('click', () => openModal(date, null, null));
+    btnRow.appendChild(addBtn);
+  }
+  const routineBtn = document.createElement('button');
+  routineBtn.className = 'btn btn-secondary';
+  routineBtn.style.cssText = 'flex:1;padding:9px;font-size:0.85rem;';
+  routineBtn.textContent = '📋 일과 추가';
+  routineBtn.addEventListener('click', () => openRoutineModal());
+  btnRow.appendChild(routineBtn);
+  panel.appendChild(btnRow);
+
   const ttFrag = renderTimetable(
     subjectMap, schedules || [], visibleRoutines, date, currentClass, profile.class_num,
     (slot, label, time) => openModal(date, slot, label)
@@ -340,24 +359,6 @@ async function showDateDetail(date) {
     });
   }
 
-  // 버튼 영역
-  const btnRow = document.createElement('div');
-  btnRow.style.cssText = 'display:flex;gap:8px;margin-top:14px;';
-  if (currentClass === profile.class_num) {
-    const addBtn = document.createElement('button');
-    addBtn.className = 'btn btn-primary';
-    addBtn.style.cssText = 'flex:1;padding:9px;font-size:0.85rem;';
-    addBtn.textContent = '+ 일정 추가';
-    addBtn.addEventListener('click', () => openModal(date, null, null));
-    btnRow.appendChild(addBtn);
-  }
-  const routineBtn = document.createElement('button');
-  routineBtn.className = 'btn btn-secondary';
-  routineBtn.style.cssText = 'flex:1;padding:9px;font-size:0.85rem;';
-  routineBtn.textContent = '📋 일과 추가';
-  routineBtn.addEventListener('click', () => openRoutineModal());
-  btnRow.appendChild(routineBtn);
-  panel.appendChild(btnRow);
 }
 
 // ─── 모달 ─────────────────────────────────────────
