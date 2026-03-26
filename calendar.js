@@ -29,6 +29,7 @@ async function init() {
 
   setupTabs();
   setupLogout();
+  setupSettings();
   setupWithdraw();
   setupModal();
   setupRoutineModal();
@@ -51,6 +52,64 @@ function setupTabs() {
       await renderCalendar();
       if (selectedDate) await showDateDetail(selectedDate);
     });
+  });
+}
+
+// ─── 설정 ─────────────────────────────────────────
+function setupSettings() {
+  const btn = document.getElementById('settings-btn');
+  const modal = document.getElementById('settings-modal');
+
+  btn.addEventListener('click', () => {
+    document.getElementById('settings-name').value = profile.name;
+    document.getElementById('settings-name-error').classList.remove('show');
+    document.getElementById('settings-pw-current').value = '';
+    document.getElementById('settings-pw-new').value = '';
+    document.getElementById('settings-pw-confirm').value = '';
+    document.getElementById('settings-pw-error').classList.remove('show');
+    modal.classList.add('open');
+  });
+  document.getElementById('settings-cancel').addEventListener('click', () => modal.classList.remove('open'));
+  modal.addEventListener('click', e => { if (e.target === modal) modal.classList.remove('open'); });
+
+  // 이름 변경
+  document.getElementById('settings-name-btn').addEventListener('click', async () => {
+    const name = document.getElementById('settings-name').value.trim();
+    const errEl = document.getElementById('settings-name-error');
+    if (!name) { errEl.textContent = '이름을 입력해주세요.'; errEl.classList.add('show'); return; }
+    const { error } = await supabase.from('profiles').update({ name }).eq('id', profile.id);
+    if (error) { errEl.textContent = '변경 실패: ' + error.message; errEl.classList.add('show'); return; }
+    profile.name = name;
+    document.getElementById('user-info').textContent = `${profile.class_num}반 ${profile.seat_num}번 ${profile.name}`;
+    errEl.textContent = '✅ 이름이 변경됐습니다.';
+    errEl.style.color = 'var(--success)';
+    errEl.classList.add('show');
+    setTimeout(() => { errEl.classList.remove('show'); errEl.style.color = ''; }, 2000);
+  });
+
+  // 비밀번호 변경
+  document.getElementById('settings-pw-btn').addEventListener('click', async () => {
+    const current = document.getElementById('settings-pw-current').value;
+    const newPw = document.getElementById('settings-pw-new').value;
+    const confirm = document.getElementById('settings-pw-confirm').value;
+    const errEl = document.getElementById('settings-pw-error');
+    errEl.style.color = '';
+    if (!current || !newPw || !confirm) { errEl.textContent = '모든 항목을 입력해주세요.'; errEl.classList.add('show'); return; }
+    if (newPw.length < 6) { errEl.textContent = '비밀번호는 6자 이상이어야 합니다.'; errEl.classList.add('show'); return; }
+    if (newPw !== confirm) { errEl.textContent = '새 비밀번호가 일치하지 않습니다.'; errEl.classList.add('show'); return; }
+    // 현재 비밀번호 확인
+    const email = `c${profile.class_num}n${profile.seat_num}@gbs.kr`;
+    const { error: authErr } = await supabase.auth.signInWithPassword({ email, password: current });
+    if (authErr) { errEl.textContent = '현재 비밀번호가 올바르지 않습니다.'; errEl.classList.add('show'); return; }
+    const { error } = await supabase.auth.updateUser({ password: newPw });
+    if (error) { errEl.textContent = '변경 실패: ' + error.message; errEl.classList.add('show'); return; }
+    errEl.textContent = '✅ 비밀번호가 변경됐습니다.';
+    errEl.style.color = 'var(--success)';
+    errEl.classList.add('show');
+    document.getElementById('settings-pw-current').value = '';
+    document.getElementById('settings-pw-new').value = '';
+    document.getElementById('settings-pw-confirm').value = '';
+    setTimeout(() => { errEl.classList.remove('show'); errEl.style.color = ''; }, 2000);
   });
 }
 
