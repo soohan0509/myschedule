@@ -2,7 +2,9 @@ import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js
 
 const ENV = window.__ENV || {};
 
-export const supabase = createClient(ENV.SUPABASE_URL, ENV.SUPABASE_ANON_KEY);
+export const supabase = createClient(ENV.SUPABASE_URL, ENV.SUPABASE_ANON_KEY, {
+  auth: { persistSession: true, autoRefreshToken: true }
+});
 
 export const NEIS_API_KEY = ENV.NEIS_API_KEY;
 export const NEIS_ATPT_CODE = ENV.NEIS_ATPT_CODE;

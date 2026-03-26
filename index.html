@@ -60,6 +60,10 @@
           <input type="number" id="signup-seat" placeholder="출석 번호" min="1" max="50" required>
         </div>
         <div class="form-group">
+          <label>번호 확인</label>
+          <input type="number" id="signup-seat-confirm" placeholder="출석 번호 재입력" min="1" max="50" required>
+        </div>
+        <div class="form-group">
           <label>비밀번호</label>
           <input type="password" id="signup-password" placeholder="6자 이상" required>
         </div>
@@ -132,6 +136,7 @@
       errEl.classList.remove('show');
 
       if (!classNum) { errEl.textContent = '반을 선택해주세요.'; errEl.classList.add('show'); return; }
+      if (seatNum !== parseInt(document.getElementById('signup-seat-confirm').value)) { errEl.textContent = '번호가 일치하지 않습니다.'; errEl.classList.add('show'); return; }
       if (password !== confirm) { errEl.textContent = '비밀번호가 일치하지 않습니다.'; errEl.classList.add('show'); return; }
       if (password.length < 6) { errEl.textContent = '비밀번호는 6자 이상이어야 합니다.'; errEl.classList.add('show'); return; }
 
