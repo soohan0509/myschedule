@@ -13,6 +13,8 @@ let selectedType = 'class';
 let selectedMembers = [];
 let selectedFiles = [];
 let currentYear, currentMonth;
+let currentView = 'month'; // 'month' | 'week' | 'day'
+let currentWeekStart = null;
 
 async function init() {
   const ok = await requireAuth();
@@ -38,6 +40,7 @@ async function init() {
 
   setupTabs();
   setupTodayBtn();
+  setupViewToggle();
   setupDarkMode();
   setupLogout();
   setupSettings();
@@ -176,6 +179,22 @@ function setupLogout() {
     await supabase.auth.signOut();
     window.location.href = 'index.html';
   });
+}
+
+// ─── 뷰 헬퍼 ─────────────────────────────────────
+function getWeekStart(date) {
+  const d = new Date(date);
+  const day = d.getDay();
+  const diff = day === 0 ? -6 : 1 - day;
+  d.setDate(d.getDate() + diff);
+  d.setHours(0, 0, 0, 0);
+  return d;
+}
+
+async function renderView() {
+  if (currentView === 'month') await renderCalendar();
+  else if (currentView === 'week') await renderWeekView();
+  else if (currentView === 'day') await renderDayView();
 }
 
 // ─── 캘린더 렌더링 ────────────────────────────────
@@ -1008,6 +1027,29 @@ function escapeHtml(str) {
     .replace(/'/g, '&#39;');
 }
 
+// ─── 뷰 토글 ──────────────────────────────────────
+function setupViewToggle() {
+  document.querySelectorAll('.view-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const view = btn.dataset.view;
+      if (view === currentView) return;
+      currentView = view;
+      document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      if (view === 'week') {
+        const base = selectedDate ? new Date(selectedDate + 'T00:00:00') : new Date();
+        currentWeekStart = getWeekStart(base);
+      }
+      if (view === 'day' && !selectedDate) {
+        const now = new Date();
+        const pad = n => String(n).padStart(2, '0');
+        selectedDate = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
+      }
+      await renderView();
+    });
+  });
+}
+
 // ─── D-Day ───────────────────────────────────────
 function calcDDay(dateStr) {
   const today = new Date();
@@ -1114,10 +1156,12 @@ function setupTodayBtn() {
     const now = new Date();
     currentYear = now.getFullYear();
     currentMonth = now.getMonth();
-    await renderCalendar();
     const pad = n => String(n).padStart(2, '0');
     const todayStr = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
     selectedDate = todayStr;
+    currentView = 'month';
+    document.querySelectorAll('.view-btn').forEach(b => b.classList.toggle('active', b.dataset.view === 'month'));
+    await renderView();
     document.querySelectorAll('.calendar-day').forEach(el => el.classList.remove('selected'));
     document.querySelector('.calendar-day.today')?.classList.add('selected');
     await showDateDetail(todayStr);
