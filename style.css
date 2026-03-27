@@ -318,10 +318,11 @@ body { font-family: 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif; backgrou
   .main-content { flex-direction: column; padding: 12px; gap: 16px; }
   /* display:contents로 calendar-section 투명화 → 자식들이 main-content flex에 직접 참여 */
   .calendar-section { display: contents; }
-  /* 항상 고정 순서: nav(1) → 시간표(2) → 캘린더 그리드(3) */
-  .cal-nav-area  { order: 1; width: 100%; }
-  .detail-panel  { order: 2; width: 100%; }
-  .cal-grid-area { order: 3; width: 100%; }
+  /* 항상 고정 순서: nav(1) → D-Day배너(1) → 시간표(2) → 캘린더 그리드(3) */
+  .cal-nav-area       { order: 1; width: 100%; }
+  #dday-banner        { order: 1; width: 100%; }
+  .detail-panel       { order: 2; width: 100%; }
+  .cal-grid-area      { order: 3; width: 100%; }
   .detail-card { position: static; }
   .calendar-nav { gap: 6px; }
   .calendar-nav h2 { font-size: 1rem; }
