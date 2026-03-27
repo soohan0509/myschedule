@@ -199,8 +199,16 @@ async function renderView() {
 
 // ─── 캘린더 렌더링 ────────────────────────────────
 async function renderCalendar() {
-  document.getElementById('month-title').textContent = `${currentYear}년 ${currentMonth + 1}월`;
+  // 다른 뷰에서 복귀 시 레이아웃 복원
+  document.querySelector('.calendar-section').style.display = '';
   const grid = document.getElementById('calendar-grid');
+  grid.style.display = '';
+  grid.className = 'calendar-grid';
+  document.querySelector('.detail-panel').style.width = '';
+  document.querySelector('.detail-panel').style.maxWidth = '';
+  document.querySelector('.detail-panel').style.margin = '';
+
+  document.getElementById('month-title').textContent = `${currentYear}년 ${currentMonth + 1}월`;
   grid.innerHTML = '';
 
   ['일','월','화','수','목','금','토'].forEach(d => {
@@ -336,6 +344,163 @@ async function renderCalendar() {
     currentMonth++; if (currentMonth > 11) { currentMonth = 0; currentYear++; }
     await renderCalendar();
   };
+}
+
+// ─── 주간 뷰 ──────────────────────────────────────
+async function renderWeekView() {
+  const pad = n => String(n).padStart(2, '0');
+
+  // 레이아웃 복원 (일간 뷰에서 왔을 수 있음)
+  document.querySelector('.calendar-section').style.display = '';
+  document.getElementById('calendar-grid').style.display = '';
+  document.querySelector('.detail-panel').style.width = '';
+  document.querySelector('.detail-panel').style.maxWidth = '';
+  document.querySelector('.detail-panel').style.margin = '';
+
+  const dates = [];
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(currentWeekStart);
+    d.setDate(d.getDate() + i);
+    dates.push(`${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`);
+  }
+  const startDate = dates[0];
+  const endDate = dates[6];
+
+  const s = new Date(startDate + 'T00:00:00');
+  const e = new Date(endDate + 'T00:00:00');
+  document.getElementById('month-title').textContent =
+    `${s.getMonth() + 1}/${s.getDate()} ~ ${e.getMonth() + 1}/${e.getDate()}`;
+
+  const [{ data: schedules }, neisForMonth] = await Promise.all([
+    supabase.from('schedules')
+      .select('date, type, title, is_dday')
+      .eq('class_num', currentClass)
+      .gte('date', startDate)
+      .lte('date', endDate),
+    fetchNeisSchedule(s.getFullYear(), s.getMonth())
+  ]);
+
+  document.getElementById('prev-month').onclick = async () => {
+    currentWeekStart.setDate(currentWeekStart.getDate() - 7);
+    await renderWeekView();
+  };
+  document.getElementById('next-month').onclick = async () => {
+    currentWeekStart.setDate(currentWeekStart.getDate() + 7);
+    await renderWeekView();
+  };
+
+  const grid = document.getElementById('calendar-grid');
+  grid.className = 'week-view-grid';
+  grid.innerHTML = '';
+
+  const today = new Date();
+  const todayStr = `${today.getFullYear()}-${pad(today.getMonth() + 1)}-${pad(today.getDate())}`;
+  const DAY_NAMES = ['일', '월', '화', '수', '목', '금', '토'];
+
+  dates.forEach(dateStr => {
+    const d = new Date(dateStr + 'T00:00:00');
+    const dayName = DAY_NAMES[d.getDay()];
+    const daySched = (schedules || []).filter(s => s.date === dateStr);
+    const neisDateStr = dateStr.replace(/-/g, '');
+    const neisSched = (neisForMonth || []).filter(s => s.date === neisDateStr);
+
+    const col = document.createElement('div');
+    col.className = 'week-day-col'
+      + (dateStr === todayStr ? ' today' : '')
+      + (dateStr === selectedDate ? ' selected' : '');
+    col.setAttribute('role', 'button');
+    col.setAttribute('tabindex', '0');
+
+    const header = document.createElement('div');
+    header.className = 'week-day-header';
+    const nameSpan = document.createElement('span');
+    nameSpan.className = 'week-day-name';
+    nameSpan.textContent = dayName;
+    const numSpan = document.createElement('span');
+    numSpan.className = 'week-day-num';
+    numSpan.textContent = d.getDate();
+    header.appendChild(nameSpan);
+    header.appendChild(numSpan);
+    col.appendChild(header);
+
+    const body = document.createElement('div');
+    body.className = 'week-day-body';
+
+    neisSched.forEach(s => {
+      const item = document.createElement('div');
+      item.className = 'week-event week-event-neis';
+      item.textContent = escapeHtml(s.name);
+      body.appendChild(item);
+    });
+
+    daySched.forEach(s => {
+      const item = document.createElement('div');
+      item.className = `week-event week-event-${s.type}${s.is_dday ? ' week-event-dday' : ''}`;
+      item.textContent = escapeHtml(s.title);
+      body.appendChild(item);
+    });
+
+    if (daySched.length === 0 && neisSched.length === 0) {
+      const empty = document.createElement('div');
+      empty.className = 'week-day-empty';
+      empty.textContent = '일정 없음';
+      body.appendChild(empty);
+    }
+
+    col.appendChild(body);
+
+    const onClick = async () => {
+      document.querySelectorAll('.week-day-col').forEach(el => el.classList.remove('selected'));
+      col.classList.add('selected');
+      selectedDate = dateStr;
+      await showDateDetail(dateStr);
+    };
+    col.addEventListener('click', onClick);
+    col.addEventListener('keydown', e => {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onClick(); }
+    });
+
+    grid.appendChild(col);
+  });
+
+  await renderDDayBanner();
+}
+
+// ─── 일간 뷰 ──────────────────────────────────────
+async function renderDayView() {
+  const pad = n => String(n).padStart(2, '0');
+
+  if (!selectedDate) {
+    const now = new Date();
+    selectedDate = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
+  }
+
+  const d = new Date(selectedDate + 'T00:00:00');
+  const DAY_NAMES = ['일', '월', '화', '수', '목', '금', '토'];
+  document.getElementById('month-title').textContent =
+    `${d.getMonth() + 1}월 ${d.getDate()}일 (${DAY_NAMES[d.getDay()]})`;
+
+  // 캘린더 섹션 숨기고 상세 패널 전체 너비
+  document.querySelector('.calendar-section').style.display = 'none';
+  document.querySelector('.detail-panel').style.width = '100%';
+  document.querySelector('.detail-panel').style.maxWidth = '720px';
+  document.querySelector('.detail-panel').style.margin = '0 auto';
+
+  document.getElementById('prev-month').onclick = async () => {
+    const prev = new Date(selectedDate + 'T00:00:00');
+    prev.setDate(prev.getDate() - 1);
+    selectedDate = `${prev.getFullYear()}-${pad(prev.getMonth() + 1)}-${pad(prev.getDate())}`;
+    await renderDayView();
+  };
+  document.getElementById('next-month').onclick = async () => {
+    const next = new Date(selectedDate + 'T00:00:00');
+    next.setDate(next.getDate() + 1);
+    selectedDate = `${next.getFullYear()}-${pad(next.getMonth() + 1)}-${pad(next.getDate())}`;
+    await renderDayView();
+  };
+
+  await showDateDetail(selectedDate);
+  await renderDDayBanner();
 }
 
 // ─── 날짜 상세 ────────────────────────────────────
