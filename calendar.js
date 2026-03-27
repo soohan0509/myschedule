@@ -59,6 +59,63 @@ async function init() {
   await loadRoutines();
   await renderCalendar();
   await loadNotifications();
+  showExamNotification();
+}
+
+// ─── 시험 D-Day 팝업 알림 ────────────────────────
+function showExamNotification() {
+  const EXAM_DATE = '2026-04-20';
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const exam = new Date(EXAM_DATE + 'T00:00:00');
+  const diff = Math.round((exam - today) / (1000 * 60 * 60 * 24));
+
+  // 시험 지난 후엔 표시 안 함
+  if (diff < 0) return;
+
+  const ddayText = diff === 0 ? 'D-Day! 🔥' : `D-${diff}`;
+
+  const notif = document.createElement('div');
+  notif.className = 'exam-notif';
+  notif.innerHTML = `
+    <button class="exam-notif-close" aria-label="닫기">✕</button>
+    <div class="exam-notif-icon">📝</div>
+    <div class="exam-notif-content">
+      <div class="exam-notif-label">1차 정기 시험</div>
+      <div class="exam-notif-dday">${ddayText}</div>
+      <div class="exam-notif-date">4월 20일 (월)</div>
+    </div>
+  `;
+  document.body.appendChild(notif);
+
+  function dismiss() {
+    notif.classList.add('exam-notif-out');
+    notif.addEventListener('animationend', () => notif.remove(), { once: true });
+  }
+
+  notif.querySelector('.exam-notif-close').addEventListener('click', dismiss);
+
+  // 스와이프 업으로 닫기
+  let startY = 0;
+  notif.addEventListener('touchstart', e => {
+    startY = e.touches[0].clientY;
+  }, { passive: true });
+  notif.addEventListener('touchmove', e => {
+    const delta = e.touches[0].clientY - startY;
+    if (delta < 0) {
+      notif.style.transform = `translateY(${delta}px)`;
+      notif.style.opacity = String(Math.max(0, 1 + delta / 120));
+    }
+  }, { passive: true });
+  notif.addEventListener('touchend', e => {
+    const delta = e.changedTouches[0].clientY - startY;
+    if (delta < -50) {
+      dismiss();
+    } else {
+      notif.style.transform = '';
+      notif.style.opacity = '';
+    }
+  });
 }
 
 // ─── 탭 ───────────────────────────────────────────

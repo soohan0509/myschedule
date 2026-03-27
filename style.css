@@ -591,3 +591,54 @@ body { font-family: 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif; backgrou
 [data-theme="dark"] .week-event-neis     { background: #1C1400; color: #FCD34D; }
 [data-theme="dark"] .week-event-dday     { background: #0D1F3C; color: #60A5FA; }
 .week-day-empty { font-size: 0.68rem; color: var(--text-muted); text-align: center; padding: 8px 0; }
+
+/* 시험 D-Day 팝업 알림 */
+.exam-notif {
+  position: fixed;
+  top: 72px;
+  right: 16px;
+  width: 270px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 14px 16px 14px 14px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.16);
+  z-index: 9998;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  animation: examNotifIn 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
+  touch-action: pan-x;
+  user-select: none;
+}
+.exam-notif-close {
+  position: absolute;
+  top: 8px;
+  right: 10px;
+  background: none;
+  border: none;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 4px 6px;
+  border-radius: 50%;
+  line-height: 1;
+  transition: background 0.15s;
+}
+.exam-notif-close:hover { background: var(--border); }
+.exam-notif-icon { font-size: 2rem; flex-shrink: 0; line-height: 1; }
+.exam-notif-content { flex: 1; min-width: 0; }
+.exam-notif-label { font-size: 0.72rem; font-weight: 600; color: var(--text-muted); margin-bottom: 2px; }
+.exam-notif-dday { font-size: 1.5rem; font-weight: 800; color: var(--primary); line-height: 1.1; }
+.exam-notif-date { font-size: 0.76rem; color: var(--text-muted); margin-top: 3px; }
+.exam-notif-out {
+  animation: examNotifOut 0.25s ease-in forwards;
+}
+@keyframes examNotifIn {
+  from { opacity: 0; transform: translateX(110%) scale(0.9); }
+  to   { opacity: 1; transform: translateX(0) scale(1); }
+}
+@keyframes examNotifOut {
+  from { opacity: 1; transform: translateY(0); }
+  to   { opacity: 0; transform: translateY(-70px); }
+}
