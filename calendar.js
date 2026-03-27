@@ -199,16 +199,12 @@ async function renderView() {
 
 // ─── 캘린더 렌더링 ────────────────────────────────
 async function renderCalendar() {
-  // 다른 뷰에서 복귀 시 레이아웃 복원
-  document.body.classList.remove('day-view');
-  document.querySelector('.calendar-section').style.display = '';
+  // 레이아웃 복원
+  document.querySelector('.cal-grid-area').style.display = '';
   const grid = document.getElementById('calendar-grid');
-  grid.style.display = '';
   grid.className = 'calendar-grid';
-  document.querySelector('.detail-panel').style.width = '';
   document.querySelector('.detail-panel').style.maxWidth = '';
   document.querySelector('.detail-panel').style.margin = '';
-  // 배너 표시 상태는 renderDDayBanner에서 결정
 
   document.getElementById('month-title').textContent = `${currentYear}년 ${currentMonth + 1}월`;
   grid.innerHTML = '';
@@ -352,11 +348,8 @@ async function renderCalendar() {
 async function renderWeekView() {
   const pad = n => String(n).padStart(2, '0');
 
-  // 레이아웃 복원 (일간 뷰에서 왔을 수 있음)
-  document.body.classList.remove('day-view');
-  document.querySelector('.calendar-section').style.display = '';
-  document.getElementById('calendar-grid').style.display = '';
-  document.querySelector('.detail-panel').style.width = '';
+  // 레이아웃 복원
+  document.querySelector('.cal-grid-area').style.display = '';
   document.querySelector('.detail-panel').style.maxWidth = '';
   document.querySelector('.detail-panel').style.margin = '';
 
@@ -483,13 +476,9 @@ async function renderDayView() {
   document.getElementById('month-title').textContent =
     `${d.getMonth() + 1}월 ${d.getDate()}일 (${DAY_NAMES[d.getDay()]})`;
 
-  // 캘린더 섹션은 유지 (nav/토글 표시), 그리드만 숨기고 상세 패널 확장
-  document.body.classList.add('day-view');
-  document.querySelector('.calendar-section').style.display = '';
-  const grid = document.getElementById('calendar-grid');
-  grid.style.display = 'none';
+  // 그리드 영역 숨기기 (nav는 유지), 데스크탑에서 상세 패널 확장
+  document.querySelector('.cal-grid-area').style.display = 'none';
   document.getElementById('dday-banner').style.display = 'none';
-  document.querySelector('.detail-panel').style.width = '100%';
   document.querySelector('.detail-panel').style.maxWidth = '720px';
   document.querySelector('.detail-panel').style.margin = '0 auto';
 

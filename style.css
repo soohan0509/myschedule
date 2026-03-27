@@ -186,7 +186,9 @@ body { font-family: 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif; backgrou
 
 /* 캘린더 레이아웃 */
 .main-content { display: flex; gap: 24px; padding: 24px; max-width: 1200px; margin: 0 auto; }
-.calendar-section { flex: 1; min-width: 0; }
+.calendar-section { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.cal-nav-area { }
+.cal-grid-area { flex: 1; }
 .calendar-nav { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
 .calendar-nav h2 { font-size: 1.15rem; font-weight: 700; }
 .nav-btn { background: none; border: 1px solid var(--border); border-radius: 8px; padding: 6px 14px; cursor: pointer; font-size: 0.9rem; }
@@ -314,12 +316,12 @@ body { font-family: 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif; backgrou
 
   /* 본문 */
   .main-content { flex-direction: column; padding: 12px; gap: 16px; }
-  /* 모바일 기본: 당일 시간표(상세 패널)를 캘린더 위에 표시 */
-  .calendar-section { order: 2; }
-  .detail-panel { order: 1; width: 100%; }
-  /* 일간 뷰: nav(캘린더 섹션)가 위, 시간표(상세 패널)가 아래 */
-  body.day-view .calendar-section { order: 1; }
-  body.day-view .detail-panel { order: 2; }
+  /* display:contents로 calendar-section 투명화 → 자식들이 main-content flex에 직접 참여 */
+  .calendar-section { display: contents; }
+  /* 항상 고정 순서: nav(1) → 시간표(2) → 캘린더 그리드(3) */
+  .cal-nav-area  { order: 1; width: 100%; }
+  .detail-panel  { order: 2; width: 100%; }
+  .cal-grid-area { order: 3; width: 100%; }
   .detail-card { position: static; }
   .calendar-nav { gap: 6px; }
   .calendar-nav h2 { font-size: 1rem; }
