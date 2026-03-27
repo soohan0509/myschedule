@@ -107,7 +107,10 @@ export function renderTimetable(subjectMap, schedules, routines, date, classNum,
 
     if (item.kind === 'slot') {
       const { key, label, time, fixed } = item.data;
-      const subject = fixed ? '' : (subjectMap[key] || '-');
+      const entry = fixed ? null : subjectMap[key];
+      const subject = fixed ? '' : (entry
+        ? (entry.teacher ? `${entry.subject}(${entry.teacher})` : entry.subject)
+        : '-');
       const slotSchedules = schedules.filter(s => s.time_slot === key);
       const badges = slotSchedules.map(s =>
         `<span class="slot-badge badge-${s.type}">${s.title}</span>`
