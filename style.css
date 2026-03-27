@@ -314,9 +314,12 @@ body { font-family: 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif; backgrou
 
   /* 본문 */
   .main-content { flex-direction: column; padding: 12px; gap: 16px; }
-  /* 모바일: 당일 시간표(상세 패널)를 캘린더 위에 표시 */
+  /* 모바일 기본: 당일 시간표(상세 패널)를 캘린더 위에 표시 */
   .calendar-section { order: 2; }
   .detail-panel { order: 1; width: 100%; }
+  /* 일간 뷰: nav(캘린더 섹션)가 위, 시간표(상세 패널)가 아래 */
+  body.day-view .calendar-section { order: 1; }
+  body.day-view .detail-panel { order: 2; }
   .detail-card { position: static; }
   .calendar-nav { gap: 6px; }
   .calendar-nav h2 { font-size: 1rem; }
