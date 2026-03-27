@@ -207,6 +207,7 @@ async function renderCalendar() {
   document.querySelector('.detail-panel').style.width = '';
   document.querySelector('.detail-panel').style.maxWidth = '';
   document.querySelector('.detail-panel').style.margin = '';
+  // 배너 표시 상태는 renderDDayBanner에서 결정
 
   document.getElementById('month-title').textContent = `${currentYear}년 ${currentMonth + 1}월`;
   grid.innerHTML = '';
@@ -480,12 +481,16 @@ async function renderDayView() {
   document.getElementById('month-title').textContent =
     `${d.getMonth() + 1}월 ${d.getDate()}일 (${DAY_NAMES[d.getDay()]})`;
 
-  // 캘린더 섹션 숨기고 상세 패널 전체 너비
-  document.querySelector('.calendar-section').style.display = 'none';
+  // 캘린더 섹션은 유지 (nav/토글 표시), 그리드만 숨기고 상세 패널 확장
+  document.querySelector('.calendar-section').style.display = '';
+  const grid = document.getElementById('calendar-grid');
+  grid.style.display = 'none';
+  document.getElementById('dday-banner').style.display = 'none';
   document.querySelector('.detail-panel').style.width = '100%';
   document.querySelector('.detail-panel').style.maxWidth = '720px';
   document.querySelector('.detail-panel').style.margin = '0 auto';
 
+  // 화살표: 하루씩 이동
   document.getElementById('prev-month').onclick = async () => {
     const prev = new Date(selectedDate + 'T00:00:00');
     prev.setDate(prev.getDate() - 1);
@@ -500,7 +505,6 @@ async function renderDayView() {
   };
 
   await showDateDetail(selectedDate);
-  await renderDDayBanner();
 }
 
 // ─── 날짜 상세 ────────────────────────────────────
