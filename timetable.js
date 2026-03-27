@@ -1,5 +1,3 @@
-import { NEIS_API_KEY, NEIS_ATPT_CODE, NEIS_SCHOOL_CODE } from './app.js';
-
 const ALL_SLOTS = [
   { key: '아침식사',  label: '아침 식사',  time: '07:50~08:40', fixed: true  },
   { key: '1교시',    label: '1교시',      time: '09:10~10:00', fixed: false },
@@ -34,17 +32,12 @@ export function getSlotsForDate(date) {
 }
 
 export async function fetchTimetable(classNum, date) {
-  const dateStr = date.replace(/-/g, '');
-  const year = date.slice(0, 4);
-  const url = `https://open.neis.go.kr/hub/hisTimetable?KEY=${NEIS_API_KEY}&Type=json&ATPT_OFCDC_SC_CODE=${NEIS_ATPT_CODE}&SD_SCHUL_CODE=${NEIS_SCHOOL_CODE}&AY=${year}&SEM=1&ALL_TI_YMD=${dateStr}&GRADE=1&CLASS_NM=${classNum}`;
+  const jsDay = new Date(date + 'T00:00:00').getDay(); // 0=일, 6=토
+  if (jsDay === 0 || jsDay === 6) return {};
+  const comciganDay = jsDay - 1; // 0=월, 1=화, 2=수, 3=목, 4=금
   try {
-    const res = await fetch(url);
-    const json = await res.json();
-    const rows = json?.hisTimetable?.[1]?.row;
-    if (!rows) return {};
-    const map = {};
-    rows.forEach(r => { map[r.PERIO + '교시'] = r.ITRT_CNTNT; });
-    return map;
+    const res = await fetch(`/api/comcigan?class=${classNum}&day=${comciganDay}`);
+    return await res.json();
   } catch {
     return {};
   }
