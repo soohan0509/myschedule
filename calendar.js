@@ -31,6 +31,7 @@ async function init() {
   setupTabs();
   setupLogout();
   setupSettings();
+  // setupWithdraw는 setupSettings 내부에서 처리
   setupWithdraw();
   setupModal();
   setupRoutineModal();
@@ -116,21 +117,12 @@ function setupSettings() {
 
 // ─── 탈퇴 ─────────────────────────────────────────
 function setupWithdraw() {
-  document.getElementById('withdraw-btn').addEventListener('click', () => {
-    document.getElementById('withdraw-password').value = '';
-    document.getElementById('withdraw-error').classList.remove('show');
-    document.getElementById('withdraw-modal').classList.add('open');
-  });
-  document.getElementById('withdraw-cancel').addEventListener('click', () => {
-    document.getElementById('withdraw-modal').classList.remove('open');
-  });
-  document.getElementById('withdraw-modal').addEventListener('click', e => {
-    if (e.target.id === 'withdraw-modal') document.getElementById('withdraw-modal').classList.remove('open');
-  });
-  document.getElementById('withdraw-confirm').addEventListener('click', async () => {
+  document.getElementById('withdraw-btn').addEventListener('click', async () => {
     const password = document.getElementById('withdraw-password').value;
     const errEl = document.getElementById('withdraw-error');
+    errEl.classList.remove('show');
     if (!password) { errEl.textContent = '비밀번호를 입력해주세요.'; errEl.classList.add('show'); return; }
+    if (!confirm('탈퇴하면 모든 개인 일정과 일과가 삭제되며 복구할 수 없습니다. 정말 탈퇴할까요?')) return;
     const email = `c${profile.class_num}n${profile.seat_num}@gbs.kr`;
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) { errEl.textContent = '비밀번호가 올바르지 않습니다.'; errEl.classList.add('show'); return; }
