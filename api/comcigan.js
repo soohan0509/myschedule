@@ -2,7 +2,7 @@ const Timetable = require('comcigan-parser');
 
 const SCHOOL_CODE = 12045;
 let cache = null;
-let cacheAt = null;
+let cacheAt = 0;
 const CACHE_TTL = 6 * 60 * 60 * 1000; // 6시간
 
 module.exports = async function handler(req, res) {
@@ -33,6 +33,8 @@ module.exports = async function handler(req, res) {
     res.setHeader('Cache-Control', 's-maxage=21600');
     res.json(result);
   } catch (e) {
+    cache = null;
+    cacheAt = 0;
     res.status(500).json({ error: e.message });
   }
 };
