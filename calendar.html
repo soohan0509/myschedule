@@ -28,7 +28,8 @@
       <button class="notification-btn" id="settings-btn" title="설정">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
       </button>
-      <a href="admin.html" class="btn btn-secondary btn-sm" id="admin-btn" style="display:none">어드민</a>
+      <!-- 어드민 링크: JS에서 관리자에게만 동적 생성 -->
+      <span id="admin-btn-placeholder"></span>
       <button class="btn btn-primary btn-sm" id="logout-btn">로그아웃</button>
     </div>
   </header>
@@ -46,21 +47,32 @@
   <div class="main-content">
     <div class="calendar-section">
       <div class="calendar-nav">
-        <button class="nav-btn" id="prev-month">◀</button>
-        <h2 id="month-title"></h2>
-        <button class="nav-btn" id="next-month">▶</button>
+        <button class="nav-btn" id="prev-month" aria-label="이전 달">◀</button>
+        <div style="display:flex;align-items:center;gap:10px">
+          <h2 id="month-title"></h2>
+          <button class="nav-btn today-btn" id="today-btn">오늘</button>
+        </div>
+        <button class="nav-btn" id="next-month" aria-label="다음 달">▶</button>
       </div>
-      <div class="calendar-grid" id="calendar-grid"></div>
+      <div class="calendar-grid" id="calendar-grid" role="grid" aria-label="캘린더"></div>
     </div>
     <div class="detail-panel">
       <div class="detail-card" id="detail-card">
-        <p style="color:var(--text-muted);font-size:0.9rem">날짜를 클릭하면<br>시간표와 일정이 표시됩니다.</p>
+        <div class="empty-state">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#CBD5E1" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+            <line x1="16" y1="2" x2="16" y2="6"/>
+            <line x1="8" y1="2" x2="8" y2="6"/>
+            <line x1="3" y1="10" x2="21" y2="10"/>
+          </svg>
+          <p>날짜를 클릭하면<br>시간표와 일정이 표시됩니다.</p>
+        </div>
       </div>
     </div>
   </div>
 
   <!-- 일정 추가 모달 -->
-  <div class="modal-overlay" id="modal">
+  <div class="modal-overlay" id="modal" role="dialog" aria-modal="true" aria-labelledby="modal-heading">
     <div class="modal">
       <h3 id="modal-heading">일정 추가</h3>
       <div class="type-selector">
@@ -93,9 +105,9 @@
   </div>
 
   <!-- 일과 추가 모달 -->
-  <div class="modal-overlay" id="routine-modal">
+  <div class="modal-overlay" id="routine-modal" role="dialog" aria-modal="true" aria-labelledby="routine-modal-heading">
     <div class="modal">
-      <h3>📋 일과 추가</h3>
+      <h3 id="routine-modal-heading">📋 일과 추가</h3>
       <div class="form-group">
         <label>제목</label>
         <input type="text" id="routine-title" placeholder="예: 개인 운동, 독서 등">
@@ -168,9 +180,9 @@
   </div>
 
   <!-- 설정 모달 -->
-  <div class="modal-overlay" id="settings-modal">
+  <div class="modal-overlay" id="settings-modal" role="dialog" aria-modal="true" aria-labelledby="settings-modal-heading">
     <div class="modal">
-      <h3>⚙️ 개인 정보 변경</h3>
+      <h3 id="settings-modal-heading">⚙️ 개인 정보 변경</h3>
       <div class="form-group">
         <label>이름 변경</label>
         <input type="text" id="settings-name" placeholder="새 이름">
@@ -186,7 +198,11 @@
       </div>
       <div class="form-group">
         <label>새 비밀번호</label>
-        <input type="password" id="settings-pw-new" placeholder="새 비밀번호 (6자 이상)">
+        <input type="password" id="settings-pw-new" placeholder="새 비밀번호 (8자 이상)">
+      </div>
+      <div style="margin-top:-8px;margin-bottom:12px">
+        <div class="pw-strength-bar" id="pw-strength-bar"></div>
+        <div class="pw-strength-label" id="pw-strength-label"></div>
       </div>
       <div class="form-group">
         <label>새 비밀번호 확인</label>
@@ -209,6 +225,19 @@
     </div>
   </div>
 
+  <!-- 급식 모달 -->
+  <div class="modal-overlay" id="meal-modal" role="dialog" aria-modal="true" aria-labelledby="meal-modal-title">
+    <div class="modal" style="max-width:340px">
+      <h3 id="meal-modal-title">급식 정보</h3>
+      <div id="meal-modal-body" style="min-height:80px"></div>
+      <div class="modal-actions">
+        <button class="btn btn-secondary" id="meal-modal-close">닫기</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 토스트 컨테이너 -->
+  <div id="toast-container"></div>
 
 <script type="module" src="calendar.js"></script>
 </body>

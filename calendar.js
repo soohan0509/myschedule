@@ -3,6 +3,7 @@ import { fetchTimetable, renderTimetable, isRoutineActive } from './timetable.js
 
 let routines = [];
 let routineExceptions = [];
+let neisScheduleCache = {}; // 'YYYYMM' → [{date, name}]
 
 let profile = null;
 let currentClass = 1;
@@ -21,7 +22,14 @@ async function init() {
   if (!profile) { window.location.href = 'index.html'; return; }
 
   document.getElementById('user-info').textContent = `${profile.class_num}반 ${profile.seat_num}번 ${profile.name}`;
-  if (profile.is_admin) document.getElementById('admin-btn').style.display = '';
+  // 어드민 링크: 관리자에게만 동적 생성 (보안)
+  if (profile.is_admin) {
+    const adminLink = document.createElement('a');
+    adminLink.href = 'admin.html';
+    adminLink.className = 'btn btn-secondary btn-sm';
+    adminLink.textContent = '어드민';
+    document.getElementById('admin-btn-placeholder').replaceWith(adminLink);
+  }
   currentClass = profile.class_num;
 
   const now = new Date();
@@ -29,6 +37,7 @@ async function init() {
   currentMonth = now.getMonth();
 
   setupTabs();
+  setupTodayBtn();
   setupLogout();
   setupSettings();
   // setupWithdraw는 setupSettings 내부에서 처리
@@ -36,6 +45,13 @@ async function init() {
   setupModal();
   setupRoutineModal();
   setupNotificationBtn();
+  // 급식 모달 닫기
+  document.getElementById('meal-modal-close').addEventListener('click', () =>
+    document.getElementById('meal-modal').classList.remove('open')
+  );
+  document.getElementById('meal-modal').addEventListener('click', e => {
+    if (e.target.id === 'meal-modal') document.getElementById('meal-modal').classList.remove('open');
+  });
   await loadRoutines();
   await renderCalendar();
   await loadNotifications();
@@ -83,13 +99,35 @@ function setupSettings() {
     if (error) { errEl.textContent = '변경 실패: ' + error.message; errEl.classList.add('show'); return; }
     profile.name = name;
     document.getElementById('user-info').textContent = `${profile.class_num}반 ${profile.seat_num}번 ${profile.name}`;
-    errEl.textContent = '✅ 이름이 변경됐습니다.';
-    errEl.style.color = 'var(--success)';
-    errEl.classList.add('show');
-    setTimeout(() => { errEl.classList.remove('show'); errEl.style.color = ''; }, 2000);
+    showToast('이름이 변경됐습니다.', 'success');
+    errEl.classList.remove('show');
   });
 
   // 비밀번호 변경
+  // 비밀번호 강도계
+  document.getElementById('settings-pw-new').addEventListener('input', function () {
+    const pw = this.value;
+    const bar = document.getElementById('pw-strength-bar');
+    const label = document.getElementById('pw-strength-label');
+    if (!pw) { bar.style.width = '0%'; label.textContent = ''; return; }
+    let score = 0;
+    if (pw.length >= 8) score++;
+    if (pw.length >= 12) score++;
+    if (/[A-Z]/.test(pw)) score++;
+    if (/[0-9]/.test(pw)) score++;
+    if (/[^A-Za-z0-9]/.test(pw)) score++;
+    if (score <= 1) {
+      bar.style.width = '33%'; bar.className = 'pw-strength-bar strength-weak';
+      label.style.color = 'var(--danger)'; label.textContent = '취약';
+    } else if (score <= 3) {
+      bar.style.width = '66%'; bar.className = 'pw-strength-bar strength-medium';
+      label.style.color = '#D97706'; label.textContent = '보통';
+    } else {
+      bar.style.width = '100%'; bar.className = 'pw-strength-bar strength-strong';
+      label.style.color = 'var(--success)'; label.textContent = '강함';
+    }
+  });
+
   document.getElementById('settings-pw-btn').addEventListener('click', async () => {
     const current = document.getElementById('settings-pw-current').value;
     const newPw = document.getElementById('settings-pw-new').value;
@@ -97,7 +135,7 @@ function setupSettings() {
     const errEl = document.getElementById('settings-pw-error');
     errEl.style.color = '';
     if (!current || !newPw || !confirm) { errEl.textContent = '모든 항목을 입력해주세요.'; errEl.classList.add('show'); return; }
-    if (newPw.length < 6) { errEl.textContent = '비밀번호는 6자 이상이어야 합니다.'; errEl.classList.add('show'); return; }
+    if (newPw.length < 8) { errEl.textContent = '비밀번호는 8자 이상이어야 합니다.'; errEl.classList.add('show'); return; }
     if (newPw !== confirm) { errEl.textContent = '새 비밀번호가 일치하지 않습니다.'; errEl.classList.add('show'); return; }
     // 현재 비밀번호 확인
     const email = `c${profile.class_num}n${profile.seat_num}@gbs.kr`;
@@ -105,9 +143,8 @@ function setupSettings() {
     if (authErr) { errEl.textContent = '현재 비밀번호가 올바르지 않습니다.'; errEl.classList.add('show'); return; }
     const { error } = await supabase.auth.updateUser({ password: newPw });
     if (error) { errEl.textContent = '변경 실패: ' + error.message; errEl.classList.add('show'); return; }
-    errEl.textContent = '✅ 비밀번호가 변경됐습니다.';
-    errEl.style.color = 'var(--success)';
-    errEl.classList.add('show');
+    showToast('비밀번호가 변경됐습니다.', 'success');
+    errEl.classList.remove('show');
     document.getElementById('settings-pw-current').value = '';
     document.getElementById('settings-pw-new').value = '';
     document.getElementById('settings-pw-confirm').value = '';
@@ -160,10 +197,22 @@ async function renderCalendar() {
   const startDate = `${currentYear}-${pad(currentMonth + 1)}-01`;
   const endDate = `${currentYear}-${pad(currentMonth + 1)}-${daysInMonth}`;
 
-  const [{ data: schedules }, { data: memberRows }] = await Promise.all([
-    supabase.from('schedules').select('date, type').eq('class_num', currentClass).gte('date', startDate).lte('date', endDate),
-    supabase.from('group_members').select('schedule_id').eq('user_id', profile.id).eq('status', 'accepted')
-  ]);
+  let schedules, memberRows, neisSchedules;
+  try {
+    const results = await Promise.all([
+      supabase.from('schedules').select('date, type').eq('class_num', currentClass).gte('date', startDate).lte('date', endDate),
+      supabase.from('group_members').select('schedule_id').eq('user_id', profile.id).eq('status', 'accepted'),
+      fetchNeisSchedule(currentYear, currentMonth)
+    ]);
+    schedules = results[0].data;
+    memberRows = results[1].data;
+    neisSchedules = results[2];
+  } catch {
+    showToast('일정을 불러오지 못했습니다. 네트워크를 확인해주세요.', 'error');
+    schedules = [];
+    memberRows = [];
+    neisSchedules = [];
+  }
 
   // 수락한 그룹 일정 중 다른 반 것도 점으로 표시
   let acceptedDots = [];
@@ -182,6 +231,15 @@ async function renderCalendar() {
     if (!dotMap[s.date]) dotMap[s.date] = [];
     dotMap[s.date].push(s.type);
   });
+  // 학사일정 dot 추가
+  (neisSchedules || []).forEach(s => {
+    const dateStr = `${s.date.slice(0, 4)}-${s.date.slice(4, 6)}-${s.date.slice(6, 8)}`;
+    if (dateStr >= startDate && dateStr <= endDate) {
+      if (!dotMap[dateStr]) dotMap[dateStr] = [];
+      dotMap[dateStr].push('neis');
+    }
+  });
+
   // 내 일과 점 표시
   routines.forEach(r => {
     if ((r.repeat_type || 'specific') === 'specific') {
@@ -229,6 +287,16 @@ async function renderCalendar() {
       });
     }
 
+    // 접근성
+    const eventCount = (dotMap[dateStr] || []).length;
+    const dayOfWeek = ['일', '월', '화', '수', '목', '금', '토'][new Date(dateStr + 'T00:00:00').getDay()];
+    d.setAttribute('aria-label', `${currentMonth + 1}월 ${day}일 ${dayOfWeek}요일${eventCount > 0 ? `, 일정 ${eventCount}개` : ''}`);
+    d.setAttribute('role', 'button');
+    d.setAttribute('tabindex', '0');
+    d.addEventListener('keydown', e => {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); d.click(); }
+    });
+
     d.addEventListener('click', async () => {
       document.querySelectorAll('.calendar-day').forEach(el => el.classList.remove('selected'));
       d.classList.add('selected');
@@ -252,13 +320,21 @@ async function renderCalendar() {
 async function showDateDetail(date) {
   const panel = document.getElementById('detail-card');
   const [m, d] = [date.slice(5, 7), date.slice(8, 10)];
-  panel.innerHTML = `<h3>${parseInt(m)}월 ${parseInt(d)}일</h3><p style="color:var(--text-muted);font-size:0.83rem">불러오는 중...</p>`;
+  panel.innerHTML = `
+    <h3>${parseInt(m)}월 ${parseInt(d)}일</h3>
+    <div class="skeleton skeleton-line medium"></div>
+    <div class="skeleton skeleton-line full"></div>
+    <div class="skeleton skeleton-line short"></div>
+  `;
 
-  const [subjectMap, { data: classSchedules }, { data: memberRows }] = await Promise.all([
+  const [subjectMap, { data: classSchedules }, { data: memberRows }, neisForMonth] = await Promise.all([
     fetchTimetable(currentClass, date),
     supabase.from('schedules').select('*, attachments(*)').eq('class_num', currentClass).eq('date', date),
-    supabase.from('group_members').select('schedule_id').eq('user_id', profile.id).eq('status', 'accepted')
+    supabase.from('group_members').select('schedule_id').eq('user_id', profile.id).eq('status', 'accepted'),
+    fetchNeisSchedule(parseInt(date.slice(0, 4)), parseInt(date.slice(5, 7)) - 1)
   ]);
+  const neisDateStr = date.replace(/-/g, '');
+  const neisDayEvents = (neisForMonth || []).filter(s => s.date === neisDateStr);
 
   // 수락한 그룹 일정 중 다른 반 것도 포함
   let schedules = classSchedules || [];
@@ -273,6 +349,17 @@ async function showDateDetail(date) {
   }
 
   panel.innerHTML = `<h3>${parseInt(m)}월 ${parseInt(d)}일</h3>`;
+
+  // 학사일정 섹션
+  if (neisDayEvents.length > 0) {
+    const neisSection = document.createElement('div');
+    neisSection.style.cssText = 'background:#FFFBEB;border:1px solid #F59E0B;border-radius:8px;padding:10px 12px;margin-bottom:12px;';
+    neisSection.innerHTML = `
+      <div style="font-size:0.75rem;font-weight:600;color:#D97706;margin-bottom:4px;">📅 학사일정</div>
+      ${neisDayEvents.map(e => `<div style="font-size:0.88rem;color:#92400E;">${escapeHtml(e.name)}</div>`).join('')}
+    `;
+    panel.appendChild(neisSection);
+  }
 
   // 예외 날짜 적용해서 오늘 보이면 안 되는 루틴 필터링
   const visibleRoutines = routines.filter(r =>
@@ -300,7 +387,8 @@ async function showDateDetail(date) {
 
   const ttFrag = renderTimetable(
     subjectMap, schedules || [], visibleRoutines, date, currentClass, profile.class_num,
-    (slot, label, time) => openModal(date, slot, label)
+    (slot, label, time) => openModal(date, slot, label),
+    (mealDate, mealCode) => showMealModal(mealDate, mealCode)
   );
   panel.appendChild(ttFrag);
 
@@ -323,12 +411,12 @@ async function showDateDetail(date) {
       const typeLabel = s.type === 'class' ? '반전체' : s.type === 'personal' ? '개인' : '그룹';
       card.innerHTML = `
         <div class="schedule-card-header">
-          <span class="schedule-card-title">${s.title}</span>
-          <span class="slot-badge badge-${s.type}">${typeLabel}</span>
+          <span class="schedule-card-title">${escapeHtml(s.title)}</span>
+          <span class="slot-badge badge-${escapeHtml(s.type)}">${escapeHtml(typeLabel)}</span>
         </div>
-        ${s.detail ? `<div class="schedule-card-detail">${s.detail}</div>` : ''}
+        ${s.detail ? `<div class="schedule-card-detail">${escapeHtml(s.detail)}</div>` : ''}
         ${(s.attachments || []).map(a =>
-          `<a class="schedule-card-file" href="${a.file_url}" target="_blank">📎 ${a.file_name}</a>`
+          `<a class="schedule-card-file" href="${escapeHtml(a.file_url)}" target="_blank" rel="noopener noreferrer">📎 ${escapeHtml(a.file_name)}</a>`
         ).join('')}
       `;
       const isGroupMember = acceptedIds.includes(s.id);
@@ -349,7 +437,9 @@ async function showDateDetail(date) {
         } else {
           del.addEventListener('click', async () => {
             if (!confirm(`"${s.title}" 일정을 삭제할까요?`)) return;
-            await supabase.from('schedules').delete().eq('id', s.id);
+            const { error } = await supabase.from('schedules').delete().eq('id', s.id);
+            if (error) { showToast('삭제 실패: ' + error.message, 'error'); return; }
+            showToast('일정이 삭제됐습니다.', 'success');
             await renderCalendar();
             await showDateDetail(date);
           });
@@ -630,6 +720,7 @@ async function submitRoutine() {
   if (error) { errEl.textContent = '저장 실패: ' + error.message; errEl.classList.add('show'); return; }
 
   document.getElementById('routine-modal').classList.remove('open');
+  showToast('일과가 저장됐습니다.', 'success');
   await loadRoutines();
   if (selectedDate) await showDateDetail(selectedDate);
 }
@@ -730,6 +821,7 @@ async function submitSchedule() {
   }
 
   closeModal();
+  showToast('일정이 저장됐습니다.', 'success');
   submitBtn.disabled = false;
   submitBtn.textContent = '저장';
   await renderCalendar();
@@ -797,6 +889,106 @@ async function handleInvite(notifId, scheduleId, accepted) {
   await supabase.from('notifications').update({ is_read: true }).eq('id', notifId);
   await loadNotifications();
   if (selectedDate) await showDateDetail(selectedDate);
+}
+
+// ─── NEIS 학사일정 ─────────────────────────────────
+async function fetchNeisSchedule(year, month) {
+  const key = `${year}${String(month + 1).padStart(2, '0')}`;
+  if (neisScheduleCache[key]) return neisScheduleCache[key];
+  try {
+    const res = await fetch(`/api/neis?type=schedule&month=${key}`);
+    if (!res.ok) return [];
+    const data = await res.json();
+    neisScheduleCache[key] = data || [];
+    return neisScheduleCache[key];
+  } catch {
+    return [];
+  }
+}
+
+// ─── 급식 모달 ─────────────────────────────────────
+const MEAL_LABEL = { 1: '🌅 아침 급식', 2: '☀️ 점심 급식', 3: '🌙 저녁 급식' };
+
+async function showMealModal(date, mealCode) {
+  const modal = document.getElementById('meal-modal');
+  const titleEl = document.getElementById('meal-modal-title');
+  const bodyEl = document.getElementById('meal-modal-body');
+
+  titleEl.textContent = `${MEAL_LABEL[mealCode]} (${date.slice(5, 7)}월 ${date.slice(8, 10)}일)`;
+  bodyEl.innerHTML = '<p style="color:var(--text-muted);font-size:0.9rem">불러오는 중...</p>';
+  modal.classList.add('open');
+
+  try {
+    const dateCompact = date.replace(/-/g, '');
+    const res = await fetch(`/api/neis?type=meal&date=${dateCompact}&mealCode=${mealCode}`);
+    const data = await res.json();
+
+    if (!data || !data.menu || data.menu.length === 0) {
+      bodyEl.innerHTML = '<p style="color:var(--text-muted)">급식 정보가 없습니다.</p>';
+      return;
+    }
+
+    const ul = document.createElement('ul');
+    ul.style.cssText = 'list-style:none;padding:0;';
+    data.menu.forEach(item => {
+      const li = document.createElement('li');
+      li.style.cssText = 'padding:6px 0;border-bottom:1px solid var(--border);font-size:0.9rem;';
+      li.textContent = item;
+      ul.appendChild(li);
+    });
+
+    bodyEl.innerHTML = '';
+    bodyEl.appendChild(ul);
+
+    if (data.cal) {
+      const calEl = document.createElement('p');
+      calEl.style.cssText = 'color:var(--text-muted);font-size:0.8rem;margin-top:10px;';
+      calEl.textContent = `칼로리: ${data.cal}`;
+      bodyEl.appendChild(calEl);
+    }
+  } catch {
+    bodyEl.innerHTML = '<p style="color:var(--danger)">급식 정보를 불러올 수 없습니다.</p>';
+  }
+}
+
+// ─── 토스트 ───────────────────────────────────────
+function showToast(message, type = 'info', duration = 2500) {
+  const container = document.getElementById('toast-container');
+  if (!container) return;
+  const toast = document.createElement('div');
+  toast.className = `toast ${type}`;
+  toast.textContent = message;
+  container.appendChild(toast);
+  setTimeout(() => {
+    toast.classList.add('toast-out');
+    toast.addEventListener('animationend', () => toast.remove());
+  }, duration);
+}
+
+// ─── XSS 방지 ────────────────────────────────────
+function escapeHtml(str) {
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+// ─── 오늘 버튼 ────────────────────────────────────
+function setupTodayBtn() {
+  document.getElementById('today-btn').addEventListener('click', async () => {
+    const now = new Date();
+    currentYear = now.getFullYear();
+    currentMonth = now.getMonth();
+    await renderCalendar();
+    const pad = n => String(n).padStart(2, '0');
+    const todayStr = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
+    selectedDate = todayStr;
+    document.querySelectorAll('.calendar-day').forEach(el => el.classList.remove('selected'));
+    document.querySelector('.calendar-day.today')?.classList.add('selected');
+    await showDateDetail(todayStr);
+  });
 }
 
 init();

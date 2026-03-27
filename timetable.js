@@ -74,7 +74,9 @@ function getSlotStatus(startStr, endStr, isToday, isPast) {
   return 'future';
 }
 
-export function renderTimetable(subjectMap, schedules, routines, date, classNum, myClassNum, onSlotClick) {
+const MEAL_CODE_MAP = { '아침식사': 1, '점심식사': 2, '저녁식사': 3 };
+
+export function renderTimetable(subjectMap, schedules, routines, date, classNum, myClassNum, onSlotClick, onMealClick) {
   const container = document.createDocumentFragment();
   const isMyClass = classNum === myClassNum;
   const slots = getSlotsForDate(date);
@@ -122,6 +124,19 @@ export function renderTimetable(subjectMap, schedules, routines, date, classNum,
         <div class="slot-label">${label}<span style="color:var(--text-muted);font-size:0.72rem;margin-left:6px">${time}</span></div>
         <div class="slot-subject">${subject}${badges}</div>
       `;
+      // 식사 슬롯에 급식 버튼 추가
+      if (fixed && MEAL_CODE_MAP[key] && onMealClick) {
+        const mealBtn = document.createElement('button');
+        mealBtn.className = 'btn-meal';
+        mealBtn.textContent = '🍚 급식';
+        mealBtn.setAttribute('aria-label', `${label} 급식 보기`);
+        mealBtn.addEventListener('click', e => {
+          e.stopPropagation();
+          onMealClick(date, MEAL_CODE_MAP[key]);
+        });
+        const subjectDiv = li.querySelector('.slot-subject');
+        if (subjectDiv) subjectDiv.appendChild(mealBtn);
+      }
       if (isMyClass) li.addEventListener('click', () => onSlotClick(key, label, time));
     } else {
       const r = item.data;
