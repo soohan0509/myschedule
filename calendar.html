@@ -25,6 +25,9 @@
           <div id="notif-list"><div class="notif-empty">새 알림이 없습니다</div></div>
         </div>
       </div>
+      <button class="notification-btn" id="darkmode-btn" title="다크 모드 전환">
+        <svg id="darkmode-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      </button>
       <button class="notification-btn" id="settings-btn" title="설정">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
       </button>
@@ -54,6 +57,7 @@
         </div>
         <button class="nav-btn" id="next-month" aria-label="다음 달">▶</button>
       </div>
+      <div id="dday-banner" class="dday-banner" style="display:none"></div>
       <div class="calendar-grid" id="calendar-grid" role="grid" aria-label="캘린더"></div>
     </div>
     <div class="detail-panel">
@@ -91,6 +95,10 @@
       <div class="form-group">
         <label>세부 정보 (시간, 장소 등)</label>
         <textarea id="modal-detail" rows="3" placeholder="세부 내용 입력..."></textarea>
+      </div>
+      <div class="form-group" style="display:flex;align-items:center;gap:10px">
+        <input type="checkbox" id="modal-dday" style="width:auto;margin:0">
+        <label for="modal-dday" style="margin:0;font-size:0.9rem;cursor:pointer">📌 D-Day로 등록 (카운트다운 배너 표시)</label>
       </div>
       <div class="file-input-area" id="file-drop">
         📎 파일 또는 사진 첨부 (클릭)

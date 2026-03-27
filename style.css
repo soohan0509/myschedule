@@ -13,6 +13,29 @@
   --shadow: 0 1px 3px rgba(0,0,0,0.1);
 }
 
+[data-theme="dark"] {
+  --primary: #60A5FA;
+  --primary-dark: #3B82F6;
+  --bg: #0F172A;
+  --card: #1E293B;
+  --border: #334155;
+  --text: #F1F5F9;
+  --text-muted: #94A3B8;
+  --danger: #F87171;
+  --success: #4ADE80;
+  --shadow: 0 1px 3px rgba(0,0,0,0.4);
+}
+[data-theme="dark"] .calendar-day:hover { background: #1E3A5F; }
+[data-theme="dark"] .calendar-day.selected { background: #1E3A5F; }
+[data-theme="dark"] .calendar-day.today .day-num { background: var(--primary); }
+[data-theme="dark"] .modal-overlay { background: rgba(0,0,0,0.65); }
+[data-theme="dark"] .tab.active { background: var(--bg); }
+[data-theme="dark"] .notif-dropdown { background: var(--card); border-color: var(--border); }
+[data-theme="dark"] .routine-delete-menu { background: var(--card); border-color: var(--border); }
+[data-theme="dark"] .dday-banner { background: linear-gradient(135deg, #1E293B 0%, #1E3A5F 100%); border-color: #334155; }
+[data-theme="dark"] .dday-item { background: #0F172A; border-color: #334155; color: #60A5FA; }
+[data-theme="dark"] .skeleton { background: linear-gradient(90deg, #1E293B 25%, #334155 50%, #1E293B 75%); background-size: 800px 100%; }
+
 body { font-family: 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif; background: var(--bg); color: var(--text); }
 
 /* 로그인 */
@@ -297,3 +320,43 @@ body { font-family: 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif; backgrou
   outline-offset: -2px;
   border-radius: 4px;
 }
+
+/* D-Day 배너 */
+.dday-banner {
+  background: linear-gradient(135deg, #EFF6FF 0%, #DBEAFE 100%);
+  border: 1px solid #93C5FD;
+  border-radius: 10px;
+  padding: 10px 16px;
+  margin-bottom: 14px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+.dday-item {
+  background: white;
+  border: 1px solid #BFDBFE;
+  border-radius: 20px;
+  padding: 4px 12px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #1D4ED8;
+  white-space: nowrap;
+}
+.dday-item.today { background: #3B82F6; color: white; border-color: #3B82F6; }
+.day-dot.dday { background: #3B82F6; border: 2px solid #1D4ED8; width: 8px; height: 8px; }
+
+/* Undo 버튼 */
+.toast-undo-btn {
+  background: none;
+  border: 1px solid rgba(255,255,255,0.4);
+  color: white;
+  border-radius: 5px;
+  padding: 2px 8px;
+  font-size: 0.8rem;
+  cursor: pointer;
+  margin-left: auto;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.toast-undo-btn:hover { background: rgba(255,255,255,0.15); }

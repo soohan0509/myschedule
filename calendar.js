@@ -38,6 +38,7 @@ async function init() {
 
   setupTabs();
   setupTodayBtn();
+  setupDarkMode();
   setupLogout();
   setupSettings();
   // setupWithdraw는 setupSettings 내부에서 처리
@@ -200,7 +201,7 @@ async function renderCalendar() {
   let schedules, memberRows, neisSchedules;
   try {
     const results = await Promise.all([
-      supabase.from('schedules').select('date, type').eq('class_num', currentClass).gte('date', startDate).lte('date', endDate),
+      supabase.from('schedules').select('date, type, is_dday').eq('class_num', currentClass).gte('date', startDate).lte('date', endDate),
       supabase.from('group_members').select('schedule_id').eq('user_id', profile.id).eq('status', 'accepted'),
       fetchNeisSchedule(currentYear, currentMonth)
     ]);
@@ -229,7 +230,7 @@ async function renderCalendar() {
   const dotMap = {};
   [...(schedules || []), ...acceptedDots].forEach(s => {
     if (!dotMap[s.date]) dotMap[s.date] = [];
-    dotMap[s.date].push(s.type);
+    dotMap[s.date].push(s.is_dday ? 'dday' : s.type);
   });
   // 학사일정 dot 추가
   (neisSchedules || []).forEach(s => {
@@ -305,6 +306,8 @@ async function renderCalendar() {
     });
     grid.appendChild(d);
   }
+
+  await renderDDayBanner();
 
   document.getElementById('prev-month').onclick = async () => {
     currentMonth--; if (currentMonth < 0) { currentMonth = 11; currentYear--; }
@@ -439,9 +442,20 @@ async function showDateDetail(date) {
             if (!confirm(`"${s.title}" 일정을 삭제할까요?`)) return;
             const { error } = await supabase.from('schedules').delete().eq('id', s.id);
             if (error) { showToast('삭제 실패: ' + error.message, 'error'); return; }
-            showToast('일정이 삭제됐습니다.', 'success');
+            const deleted = {
+              class_num: s.class_num, date: s.date, time_slot: s.time_slot,
+              title: s.title, detail: s.detail, type: s.type,
+              created_by: s.created_by, is_dday: s.is_dday || false,
+            };
             await renderCalendar();
             await showDateDetail(date);
+            showUndoToast(`"${s.title}" 삭제됨`, async () => {
+              const { error: restoreErr } = await supabase.from('schedules').insert(deleted);
+              if (restoreErr) { showToast('복원 실패: ' + restoreErr.message, 'error'); return; }
+              showToast('일정이 복원됐습니다.', 'success');
+              await renderCalendar();
+              if (selectedDate) await showDateDetail(selectedDate);
+            });
           });
         }
         card.appendChild(del);
@@ -736,6 +750,8 @@ async function openModal(date, slot, label) {
   document.getElementById('modal-detail').value = '';
   document.getElementById('file-list').textContent = '';
   document.getElementById('file-input').value = '';
+  const ddayCb = document.getElementById('modal-dday');
+  if (ddayCb) ddayCb.checked = false;
   document.querySelectorAll('.type-btn').forEach(b => b.classList.remove('active'));
   document.querySelector('.type-btn[data-type="class"]').classList.add('active');
   document.getElementById('group-section').style.display = 'none';
@@ -778,8 +794,24 @@ function closeModal() {
 async function submitSchedule() {
   const title = document.getElementById('modal-title-input').value.trim();
   const detail = document.getElementById('modal-detail').value.trim();
+  const isDday = document.getElementById('modal-dday')?.checked || false;
   if (!title) { alert('제목을 입력해주세요.'); return; }
   if (selectedType === 'group' && selectedMembers.length === 0) { alert('그룹 멤버를 1명 이상 선택해주세요.'); return; }
+
+  // 중복 일정 체크
+  if (selectedSlot && selectedSlot !== 'all-day' && selectedSlot !== 'submission') {
+    const { data: existing } = await supabase
+      .from('schedules')
+      .select('id, title')
+      .eq('class_num', profile.class_num)
+      .eq('date', selectedDate)
+      .eq('time_slot', selectedSlot)
+      .limit(1);
+    if (existing && existing.length > 0) {
+      const proceed = confirm(`"${existing[0].title}" 일정이 이미 이 시간에 있습니다.\n그래도 추가하시겠습니까?`);
+      if (!proceed) return;
+    }
+  }
 
   const submitBtn = document.getElementById('modal-submit');
   submitBtn.disabled = true;
@@ -792,7 +824,8 @@ async function submitSchedule() {
     title,
     detail,
     type: selectedType,
-    created_by: profile.id
+    created_by: profile.id,
+    is_dday: isDday
   }).select().single();
 
   if (error) {
@@ -973,6 +1006,106 @@ function escapeHtml(str) {
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#39;');
+}
+
+// ─── D-Day ───────────────────────────────────────
+function calcDDay(dateStr) {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const target = new Date(dateStr + 'T00:00:00');
+  const diff = Math.round((target - today) / (1000 * 60 * 60 * 24));
+  if (diff === 0) return 'D-Day';
+  if (diff > 0) return `D-${diff}`;
+  return `D+${Math.abs(diff)}`;
+}
+
+async function renderDDayBanner() {
+  const banner = document.getElementById('dday-banner');
+  if (!banner) return;
+  const pad = n => String(n).padStart(2, '0');
+  const today = new Date();
+  const todayStr = `${today.getFullYear()}-${pad(today.getMonth() + 1)}-${pad(today.getDate())}`;
+  const futureDate = new Date(today);
+  futureDate.setDate(futureDate.getDate() + 90);
+  const futureStr = `${futureDate.getFullYear()}-${pad(futureDate.getMonth() + 1)}-${pad(futureDate.getDate())}`;
+
+  const { data } = await supabase
+    .from('schedules')
+    .select('title, date, is_dday')
+    .eq('is_dday', true)
+    .gte('date', todayStr)
+    .lte('date', futureStr)
+    .order('date', { ascending: true })
+    .limit(5);
+
+  const items = data || [];
+  if (items.length === 0) { banner.style.display = 'none'; return; }
+
+  banner.style.display = 'flex';
+  banner.innerHTML = '<span style="font-size:0.78rem;font-weight:600;color:#3B82F6;white-space:nowrap;">📌 D-Day</span>';
+  items.forEach(s => {
+    const dday = calcDDay(s.date);
+    const span = document.createElement('span');
+    span.className = 'dday-item' + (dday === 'D-Day' ? ' today' : '');
+    span.textContent = `${escapeHtml(s.title)} ${dday}`;
+    banner.appendChild(span);
+  });
+}
+
+// ─── 다크 모드 ────────────────────────────────────
+function applyTheme(dark) {
+  document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
+  const icon = document.getElementById('darkmode-icon');
+  if (!icon) return;
+  icon.innerHTML = dark
+    ? '<circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>'
+    : '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>';
+}
+
+function setupDarkMode() {
+  const saved = localStorage.getItem('theme');
+  const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+  const isDark = saved ? saved === 'dark' : prefersDark;
+  applyTheme(isDark);
+  document.getElementById('darkmode-btn').addEventListener('click', () => {
+    const current = document.documentElement.getAttribute('data-theme') === 'dark';
+    const next = !current;
+    applyTheme(next);
+    localStorage.setItem('theme', next ? 'dark' : 'light');
+  });
+}
+
+// ─── Undo 토스트 ──────────────────────────────────
+function showUndoToast(message, onUndo, duration = 5000) {
+  const container = document.getElementById('toast-container');
+  if (!container) return;
+  const toast = document.createElement('div');
+  toast.className = 'toast success';
+  toast.style.cssText += ';justify-content:space-between;';
+  const msgSpan = document.createElement('span');
+  msgSpan.textContent = message;
+  toast.appendChild(msgSpan);
+  const undoBtn = document.createElement('button');
+  undoBtn.className = 'toast-undo-btn';
+  undoBtn.textContent = '실행 취소';
+  toast.appendChild(undoBtn);
+  container.appendChild(toast);
+
+  let cancelled = false;
+  const timer = setTimeout(() => {
+    if (!cancelled) {
+      toast.classList.add('toast-out');
+      toast.addEventListener('animationend', () => toast.remove());
+    }
+  }, duration);
+
+  undoBtn.addEventListener('click', () => {
+    cancelled = true;
+    clearTimeout(timer);
+    toast.classList.add('toast-out');
+    toast.addEventListener('animationend', () => toast.remove());
+    onUndo();
+  });
 }
 
 // ─── 오늘 버튼 ────────────────────────────────────
