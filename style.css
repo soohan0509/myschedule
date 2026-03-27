@@ -42,6 +42,21 @@
 [data-theme="dark"] .file-input-area { background: #1A1A1A; border-color: #2A2A2A; }
 [data-theme="dark"] .form-group input, [data-theme="dark"] .form-group select, [data-theme="dark"] .form-group textarea { background: #1A1A1A; border-color: #2A2A2A; color: var(--text); }
 
+/* 다크모드 버튼 색상 정교화 (by DeepSeek) */
+[data-theme="dark"] .type-btn { background: #1A1A1A; border-color: #2A2A2A; color: var(--text-muted); }
+[data-theme="dark"] .type-btn.active { background: #0D1F3C; color: #60A5FA; border-color: #1D4ED8; }
+[data-theme="dark"] .timetable-slot.clickable:hover { background: #1A1A1A; border-color: #3B82F6; }
+[data-theme="dark"] .slot-current { background: #0F2744 !important; border-left: 3px solid #60A5FA !important; border-color: #1D3A5F !important; }
+[data-theme="dark"] .slot-current .slot-label { color: #60A5FA; }
+[data-theme="dark"] .today-btn:hover { background: #1A1A1A; }
+[data-theme="dark"] .btn-meal { background: #2A1F00; color: #FCD34D; border-color: #3E2E00; }
+[data-theme="dark"] .btn-meal:hover { background: #3E2E00; }
+[data-theme="dark"] .tab.active { background: #111111; color: #60A5FA; border-color: #2A2A2A; border-bottom: 2px solid #60A5FA; }
+[data-theme="dark"] .rdm-btn:hover { background: #1A1A1A; }
+[data-theme="dark"] .form-group input:focus, [data-theme="dark"] .form-group textarea:focus { background: #111111; border-color: #60A5FA; }
+[data-theme="dark"] .member-chip { background: #1A1A1A; border-color: #2A2A2A; color: var(--text); }
+[data-theme="dark"] .member-chip.selected { background: #0D1F3C; border-color: #3B82F6; color: #60A5FA; }
+
 body { font-family: 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif; background: var(--bg); color: var(--text); }
 
 /* 로그인 */
