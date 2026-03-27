@@ -331,20 +331,29 @@ async function showDateDetail(date) {
           `<a class="schedule-card-file" href="${a.file_url}" target="_blank">📎 ${a.file_name}</a>`
         ).join('')}
       `;
+      const isGroupMember = acceptedIds.includes(s.id);
       const canDelete = s.type === 'class'
         ? currentClass === profile.class_num
-        : s.created_by === profile.id;
+        : s.type === 'personal'
+          ? s.created_by === profile.id
+          : s.created_by === profile.id || isGroupMember;
 
       if (canDelete) {
         const del = document.createElement('button');
         del.className = 'btn-delete';
         del.textContent = '삭제';
-        del.addEventListener('click', async () => {
-          if (!confirm(`"${s.title}" 일정을 삭제할까요?`)) return;
-          await supabase.from('schedules').delete().eq('id', s.id);
-          await renderCalendar();
-          await showDateDetail(date);
-        });
+        if (s.type === 'group') {
+          del.addEventListener('click', () =>
+            showGroupDeleteMenu(del, s.id, s.created_by === profile.id, date)
+          );
+        } else {
+          del.addEventListener('click', async () => {
+            if (!confirm(`"${s.title}" 일정을 삭제할까요?`)) return;
+            await supabase.from('schedules').delete().eq('id', s.id);
+            await renderCalendar();
+            await showDateDetail(date);
+          });
+        }
         card.appendChild(del);
       }
       panel.appendChild(card);
@@ -413,6 +422,51 @@ function showRoutineDeleteMenu(btn, routineId, date) {
   });
 
   // 바깥 클릭 시 닫기
+  setTimeout(() => {
+    document.addEventListener('click', function handler(e) {
+      if (!menu.contains(e.target)) { menu.remove(); document.removeEventListener('click', handler); }
+    });
+  }, 0);
+}
+
+function showGroupDeleteMenu(btn, scheduleId, isCreator, date) {
+  document.querySelectorAll('.routine-delete-menu').forEach(el => el.remove());
+
+  const menu = document.createElement('div');
+  menu.className = 'routine-delete-menu';
+  menu.innerHTML = `
+    <button class="rdm-btn rdm-danger" id="gdm-all">모두에게서 삭제</button>
+    <button class="rdm-btn" id="gdm-me">나에게서만 삭제</button>
+  `;
+  btn.parentElement.style.position = 'relative';
+  btn.parentElement.appendChild(menu);
+
+  menu.querySelector('#gdm-all').addEventListener('click', async () => {
+    if (!confirm('그룹 일정을 모두에게서 삭제할까요?')) return;
+    await supabase.from('schedules').delete().eq('id', scheduleId);
+    menu.remove();
+    await renderCalendar();
+    await showDateDetail(date);
+  });
+
+  menu.querySelector('#gdm-me').addEventListener('click', async () => {
+    if (isCreator) {
+      await supabase.from('group_members').insert({
+        schedule_id: scheduleId,
+        user_id: profile.id,
+        status: 'left'
+      });
+    } else {
+      await supabase.from('group_members')
+        .update({ status: 'left' })
+        .eq('schedule_id', scheduleId)
+        .eq('user_id', profile.id);
+    }
+    menu.remove();
+    await renderCalendar();
+    await showDateDetail(date);
+  });
+
   setTimeout(() => {
     document.addEventListener('click', function handler(e) {
       if (!menu.contains(e.target)) { menu.remove(); document.removeEventListener('click', handler); }
