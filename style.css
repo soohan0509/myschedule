@@ -16,25 +16,31 @@
 [data-theme="dark"] {
   --primary: #60A5FA;
   --primary-dark: #3B82F6;
-  --bg: #0F172A;
-  --card: #1E293B;
-  --border: #334155;
-  --text: #F1F5F9;
-  --text-muted: #94A3B8;
+  --bg: #000000;
+  --card: #111111;
+  --border: #2A2A2A;
+  --text: #F0F0F0;
+  --text-muted: #888888;
   --danger: #F87171;
   --success: #4ADE80;
-  --shadow: 0 1px 3px rgba(0,0,0,0.4);
+  --shadow: 0 1px 3px rgba(0,0,0,0.6);
 }
-[data-theme="dark"] .calendar-day:hover { background: #1E3A5F; }
-[data-theme="dark"] .calendar-day.selected { background: #1E3A5F; }
+[data-theme="dark"] .calendar-day:hover { background: #1A1A1A; }
+[data-theme="dark"] .calendar-day.selected { background: #1C2A3A; }
 [data-theme="dark"] .calendar-day.today .day-num { background: var(--primary); }
-[data-theme="dark"] .modal-overlay { background: rgba(0,0,0,0.65); }
+[data-theme="dark"] .modal-overlay { background: rgba(0,0,0,0.8); }
 [data-theme="dark"] .tab.active { background: var(--bg); }
 [data-theme="dark"] .notif-dropdown { background: var(--card); border-color: var(--border); }
 [data-theme="dark"] .routine-delete-menu { background: var(--card); border-color: var(--border); }
-[data-theme="dark"] .dday-banner { background: linear-gradient(135deg, #1E293B 0%, #1E3A5F 100%); border-color: #334155; }
-[data-theme="dark"] .dday-item { background: #0F172A; border-color: #334155; color: #60A5FA; }
-[data-theme="dark"] .skeleton { background: linear-gradient(90deg, #1E293B 25%, #334155 50%, #1E293B 75%); background-size: 800px 100%; }
+[data-theme="dark"] .dday-banner { background: #111111; border-color: #2A2A2A; }
+[data-theme="dark"] .dday-item { background: #000000; border-color: #2A2A2A; color: #60A5FA; }
+[data-theme="dark"] .skeleton { background: linear-gradient(90deg, #111111 25%, #222222 50%, #111111 75%); background-size: 800px 100%; }
+[data-theme="dark"] .btn-secondary { background: #1A1A1A; border-color: #2A2A2A; }
+[data-theme="dark"] .nav-btn { background: #111111; border-color: #2A2A2A; color: var(--text); }
+[data-theme="dark"] .timetable-slot { border-color: #2A2A2A; }
+[data-theme="dark"] .schedule-card { background: #1A1A1A; border-color: #2A2A2A; }
+[data-theme="dark"] .file-input-area { background: #1A1A1A; border-color: #2A2A2A; }
+[data-theme="dark"] .form-group input, [data-theme="dark"] .form-group select, [data-theme="dark"] .form-group textarea { background: #1A1A1A; border-color: #2A2A2A; color: var(--text); }
 
 body { font-family: 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif; background: var(--bg); color: var(--text); }
 
