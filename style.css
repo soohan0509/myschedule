@@ -13,6 +13,7 @@
   --shadow: 0 1px 3px rgba(0,0,0,0.1);
 }
 
+/* ═══════════════ 다크 모드 ═══════════════ */
 [data-theme="dark"] {
   --primary: #60A5FA;
   --primary-dark: #3B82F6;
@@ -20,42 +21,129 @@
   --card: #111111;
   --border: #2A2A2A;
   --text: #F0F0F0;
-  --text-muted: #888888;
+  --text-muted: #909090;
   --danger: #F87171;
   --success: #4ADE80;
   --shadow: 0 1px 3px rgba(0,0,0,0.6);
 }
-[data-theme="dark"] .calendar-day:hover { background: #1A1A1A; }
-[data-theme="dark"] .calendar-day.selected { background: #1C2A3A; }
-[data-theme="dark"] .calendar-day.today .day-num { background: var(--primary); }
-[data-theme="dark"] .modal-overlay { background: rgba(0,0,0,0.8); }
-[data-theme="dark"] .tab.active { background: var(--bg); }
-[data-theme="dark"] .notif-dropdown { background: var(--card); border-color: var(--border); }
-[data-theme="dark"] .routine-delete-menu { background: var(--card); border-color: var(--border); }
-[data-theme="dark"] .dday-banner { background: #111111; border-color: #2A2A2A; }
-[data-theme="dark"] .dday-item { background: #000000; border-color: #2A2A2A; color: #60A5FA; }
-[data-theme="dark"] .skeleton { background: linear-gradient(90deg, #111111 25%, #222222 50%, #111111 75%); background-size: 800px 100%; }
-[data-theme="dark"] .btn-secondary { background: #1A1A1A; border-color: #2A2A2A; }
-[data-theme="dark"] .nav-btn { background: #111111; border-color: #2A2A2A; color: var(--text); }
-[data-theme="dark"] .timetable-slot { border-color: #2A2A2A; }
-[data-theme="dark"] .schedule-card { background: #1A1A1A; border-color: #2A2A2A; }
-[data-theme="dark"] .file-input-area { background: #1A1A1A; border-color: #2A2A2A; }
-[data-theme="dark"] .form-group input, [data-theme="dark"] .form-group select, [data-theme="dark"] .form-group textarea { background: #1A1A1A; border-color: #2A2A2A; color: var(--text); }
 
-/* 다크모드 버튼 색상 정교화 (by DeepSeek) */
-[data-theme="dark"] .type-btn { background: #1A1A1A; border-color: #2A2A2A; color: var(--text-muted); }
-[data-theme="dark"] .type-btn.active { background: #0D1F3C; color: #60A5FA; border-color: #1D4ED8; }
-[data-theme="dark"] .timetable-slot.clickable:hover { background: #1A1A1A; border-color: #3B82F6; }
-[data-theme="dark"] .slot-current { background: #0F2744 !important; border-left: 3px solid #60A5FA !important; border-color: #1D3A5F !important; }
-[data-theme="dark"] .slot-current .slot-label { color: #60A5FA; }
-[data-theme="dark"] .today-btn:hover { background: #1A1A1A; }
-[data-theme="dark"] .btn-meal { background: #2A1F00; color: #FCD34D; border-color: #3E2E00; }
-[data-theme="dark"] .btn-meal:hover { background: #3E2E00; }
-[data-theme="dark"] .tab.active { background: #111111; color: #60A5FA; border-color: #2A2A2A; border-bottom: 2px solid #60A5FA; }
+/* 전체 텍스트/아이콘 색상 보장 */
+[data-theme="dark"] body { color: #F0F0F0; }
+[data-theme="dark"] button { color: #F0F0F0; }
+[data-theme="dark"] a { color: #60A5FA; }
+
+/* 헤더 */
+[data-theme="dark"] .app-header { background: #111111; border-color: #2A2A2A; }
+[data-theme="dark"] .app-header h1 { color: #F0F0F0; }
+[data-theme="dark"] .notification-btn { color: #F0F0F0; }
+[data-theme="dark"] .user-info { color: #909090; }
+
+/* 반 탭 */
+[data-theme="dark"] .class-tabs { background: #111111; border-color: #2A2A2A; }
+[data-theme="dark"] .tab { color: #909090; }
+[data-theme="dark"] .tab.active { background: #000000; color: #60A5FA; border-color: #2A2A2A; border-bottom: 2px solid #60A5FA; }
+[data-theme="dark"] .tab:hover { color: #F0F0F0; }
+
+/* 버튼들 */
+[data-theme="dark"] .btn-primary { background: #2563EB; color: white; }
+[data-theme="dark"] .btn-primary:hover { background: #1D4ED8; }
+[data-theme="dark"] .btn-secondary { background: #1A1A1A; color: #F0F0F0; border-color: #3A3A3A; }
+[data-theme="dark"] .btn-secondary:hover { background: #222222; }
+[data-theme="dark"] .nav-btn { background: #1A1A1A; border-color: #3A3A3A; color: #F0F0F0; }
+[data-theme="dark"] .nav-btn:hover { background: #222222; }
+[data-theme="dark"] .today-btn { color: #60A5FA; border-color: #60A5FA; }
+[data-theme="dark"] .today-btn:hover { background: #0D1F3C; }
+[data-theme="dark"] .type-btn { background: #1A1A1A; border-color: #3A3A3A; color: #909090; }
+[data-theme="dark"] .type-btn.active { background: #0D1F3C; color: #60A5FA; border-color: #3B82F6; }
+[data-theme="dark"] .btn-delete { background: #7F1D1D; color: #FCA5A5; }
+[data-theme="dark"] .btn-meal { background: #1C1400; color: #FCD34D; border-color: #3A2E00; }
+[data-theme="dark"] .btn-meal:hover { background: #2A1F00; }
+[data-theme="dark"] .btn-accept { background: #14532D; color: #86EFAC; }
+[data-theme="dark"] .btn-reject { background: #7F1D1D; color: #FCA5A5; }
+[data-theme="dark"] .rdm-btn { color: #F0F0F0; }
 [data-theme="dark"] .rdm-btn:hover { background: #1A1A1A; }
-[data-theme="dark"] .form-group input:focus, [data-theme="dark"] .form-group textarea:focus { background: #111111; border-color: #60A5FA; }
-[data-theme="dark"] .member-chip { background: #1A1A1A; border-color: #2A2A2A; color: var(--text); }
-[data-theme="dark"] .member-chip.selected { background: #0D1F3C; border-color: #3B82F6; color: #60A5FA; }
+[data-theme="dark"] .rdm-danger { color: #F87171; }
+
+/* 캘린더 */
+[data-theme="dark"] .calendar-grid { background: #2A2A2A; }
+[data-theme="dark"] .calendar-day { background: #111111; }
+[data-theme="dark"] .calendar-day-header { background: #111111; color: #909090; }
+[data-theme="dark"] .calendar-day:hover { background: #1A1A1A; }
+[data-theme="dark"] .calendar-day.selected { background: #0D1F3C; }
+[data-theme="dark"] .calendar-day.today .day-num { background: #60A5FA; color: #000; }
+[data-theme="dark"] .day-num { color: #F0F0F0; }
+
+/* 상세 패널 */
+[data-theme="dark"] .detail-card { background: #111111; }
+[data-theme="dark"] .detail-card h3 { color: #F0F0F0; border-color: #2A2A2A; }
+[data-theme="dark"] .section-title { color: #909090; }
+
+/* 시간표 슬롯 */
+[data-theme="dark"] .timetable-slot { border-color: #2A2A2A; background: #111111; }
+[data-theme="dark"] .timetable-slot.clickable:hover { background: #1A1A1A; border-color: #60A5FA; }
+[data-theme="dark"] .slot-label { color: #909090; }
+[data-theme="dark"] .slot-subject { color: #F0F0F0; }
+[data-theme="dark"] .slot-past .slot-label, [data-theme="dark"] .slot-past .slot-subject { color: #555555; }
+[data-theme="dark"] .slot-current { background: #0D1F3C !important; border-color: #1D3A5F !important; border-left: 3px solid #60A5FA !important; }
+[data-theme="dark"] .slot-current .slot-label { color: #60A5FA; }
+[data-theme="dark"] .submission-section { background: #1A1200; border-color: #3A2E00; }
+[data-theme="dark"] .submission-section h4 { color: #FCD34D; }
+
+/* 뱃지 */
+[data-theme="dark"] .badge-class { background: #0D1F3C; color: #93C5FD; }
+[data-theme="dark"] .badge-personal { background: #052E16; color: #86EFAC; }
+[data-theme="dark"] .badge-group { background: #1C1400; color: #FCD34D; }
+
+/* 일정 카드 */
+[data-theme="dark"] .schedule-card { background: #1A1A1A; border-color: #2A2A2A; }
+[data-theme="dark"] .schedule-card-title { color: #F0F0F0; }
+[data-theme="dark"] .schedule-card-detail { color: #909090; }
+
+/* 모달 */
+[data-theme="dark"] .modal-overlay { background: rgba(0,0,0,0.8); }
+[data-theme="dark"] .modal { background: #111111; }
+[data-theme="dark"] .modal h3 { color: #F0F0F0; }
+[data-theme="dark"] .form-group label { color: #D0D0D0; }
+[data-theme="dark"] .form-group input,
+[data-theme="dark"] .form-group select,
+[data-theme="dark"] .form-group textarea { background: #1A1A1A; border-color: #3A3A3A; color: #F0F0F0; }
+[data-theme="dark"] .form-group input:focus,
+[data-theme="dark"] .form-group select:focus,
+[data-theme="dark"] .form-group textarea:focus { border-color: #60A5FA; background: #1A1A1A; }
+[data-theme="dark"] .file-input-area { background: #1A1A1A; border-color: #3A3A3A; color: #909090; }
+[data-theme="dark"] .file-input-area:hover { border-color: #60A5FA; }
+[data-theme="dark"] .member-list { border-color: #2A2A2A; background: #1A1A1A; }
+[data-theme="dark"] .member-item { color: #F0F0F0; }
+[data-theme="dark"] .member-item:hover { background: #222222; }
+[data-theme="dark"] .modal-actions { border-color: #2A2A2A; }
+
+/* 알림 드롭다운 */
+[data-theme="dark"] .notif-dropdown { background: #111111; border-color: #2A2A2A; }
+[data-theme="dark"] .notif-header { color: #F0F0F0; border-color: #2A2A2A; background: #111111; }
+[data-theme="dark"] .notif-item { border-color: #2A2A2A; color: #F0F0F0; }
+[data-theme="dark"] .notif-item:hover { background: #1A1A1A; }
+[data-theme="dark"] .notif-empty { color: #909090; }
+
+/* 옵션 메뉴 */
+[data-theme="dark"] .routine-delete-menu { background: #111111; border-color: #2A2A2A; box-shadow: 0 4px 16px rgba(0,0,0,0.5); }
+
+/* 스켈레톤 */
+[data-theme="dark"] .skeleton { background: linear-gradient(90deg, #1A1A1A 25%, #272727 50%, #1A1A1A 75%); background-size: 800px 100%; }
+
+/* D-Day 배너 */
+[data-theme="dark"] .dday-banner { background: #0D1520; border-color: #1D3A5F; }
+[data-theme="dark"] .dday-item { background: #111111; border-color: #2A2A2A; color: #60A5FA; }
+[data-theme="dark"] .dday-item.today { background: #1D4ED8; color: white; }
+
+/* 미니 캘린더 */
+[data-theme="dark"] .mini-cal { background: #1A1A1A; border-color: #2A2A2A; }
+[data-theme="dark"] .mini-cal-day { color: #F0F0F0; }
+[data-theme="dark"] .mini-cal-day:hover { background: #222222; }
+[data-theme="dark"] .mini-cal-day.selected { background: #0D1F3C; color: #60A5FA; }
+[data-theme="dark"] .mini-cal-header { color: #909090; }
+
+/* 에러 메시지 */
+[data-theme="dark"] .error-msg { color: #F87171; }
 
 body { font-family: 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif; background: var(--bg); color: var(--text); }
 
