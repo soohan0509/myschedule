@@ -1,0 +1,104 @@
+<h2>전체 구현 설계</h2>
+<p class="subtitle">NEIS API 우선 + 전체 개선사항 통합 아키텍처</p>
+
+<div class="section">
+  <div class="label">NEIS API — 아키텍처 (최우선)</div>
+  <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:16px;margin-top:12px;">
+    <div style="display:grid;grid-template-columns:1fr auto 1fr auto 1fr;gap:8px;align-items:center;text-align:center;">
+      <div style="background:#eff6ff;border:1px solid #93c5fd;border-radius:8px;padding:12px;">
+        <div style="font-size:20px;margin-bottom:4px;">🌐</div>
+        <div style="font-weight:600;font-size:13px;">Browser</div>
+        <div style="font-size:11px;color:#64748b;margin-top:4px;">calendar.js<br>timetable.js</div>
+      </div>
+      <div style="font-size:20px;color:#94a3b8;">→</div>
+      <div style="background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:12px;">
+        <div style="font-size:20px;margin-bottom:4px;">⚡</div>
+        <div style="font-weight:600;font-size:13px;">Vercel Serverless</div>
+        <div style="font-size:11px;color:#64748b;margin-top:4px;">api/neis.js<br>(1시간 캐시)</div>
+      </div>
+      <div style="font-size:20px;color:#94a3b8;">→</div>
+      <div style="background:#fdf4ff;border:1px solid #d8b4fe;border-radius:8px;padding:12px;">
+        <div style="font-size:20px;margin-bottom:4px;">🏫</div>
+        <div style="font-weight:600;font-size:13px;">NEIS Open API</div>
+        <div style="font-size:11px;color:#64748b;margin-top:4px;">학사일정<br>급식 정보</div>
+      </div>
+    </div>
+    <div style="margin-top:12px;font-size:13px;color:#475569;background:#fffbeb;border-radius:6px;padding:10px;">
+      💡 API 키는 Vercel 환경변수 <code style="background:#f1f5f9;padding:1px 5px;border-radius:3px;">NEIS_API_KEY</code>에 저장 → 브라우저에 노출되지 않음<br>
+      캐싱으로 API 호출 최소화 (학사일정 24시간, 급식 1시간)
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="label">NEIS 기능 상세</div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px;">
+    <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:14px;">
+      <div style="font-weight:600;margin-bottom:8px;">📅 학사일정 → 캘린더 자동 표시</div>
+      <ul style="margin:0;padding-left:18px;font-size:13px;line-height:1.9;color:#475569;">
+        <li>월별 학사일정 자동 로드</li>
+        <li>캘린더 날짜에 <span style="background:#fbbf24;color:white;padding:0 4px;border-radius:3px;font-size:11px;">학사</span> 점 표시</li>
+        <li>날짜 클릭 시 사이드패널에 학사일정 내용 표시</li>
+        <li>개학, 방학, 시험 등 자동 구분</li>
+      </ul>
+    </div>
+    <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:14px;">
+      <div style="font-weight:600;margin-bottom:8px;">🍚 급식 → 시간표 인라인 버튼 (선택A)</div>
+      <ul style="margin:0;padding-left:18px;font-size:13px;line-height:1.9;color:#475569;">
+        <li>아침(7:30) / 점심(12:30) / 저녁(18:30)</li>
+        <li>각 식사 시간 행에 "🍚 급식" 버튼</li>
+        <li>클릭 시 당일 메뉴 모달 팝업</li>
+        <li>칼로리 정보 포함 (NEIS 제공 시)</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="label">함께 구현할 개선사항 (NEIS와 동시 진행)</div>
+  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:12px;font-size:13px;">
+    <div style="background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:12px;">
+      <div style="font-weight:600;color:#16a34a;margin-bottom:6px;">즉시 적용</div>
+      <ul style="margin:0;padding-left:16px;line-height:1.9;color:#166534;">
+        <li>"오늘" 버튼</li>
+        <li>토스트 알림</li>
+        <li>모달 애니메이션</li>
+        <li>어드민 링크 숨기기</li>
+        <li>XSS 이스케이프</li>
+        <li>로딩 스켈레톤</li>
+        <li>API 에러 핸들링</li>
+      </ul>
+    </div>
+    <div style="background:#eff6ff;border:1px solid #93c5fd;border-radius:8px;padding:12px;">
+      <div style="font-weight:600;color:#2563eb;margin-bottom:6px;">중간 단계</div>
+      <ul style="margin:0;padding-left:16px;line-height:1.9;color:#1d4ed8;">
+        <li>D-Day 카운트다운</li>
+        <li>일정 중복 경고</li>
+        <li>다크 모드</li>
+        <li>주간/일간 뷰</li>
+        <li>빈 상태 디자인</li>
+        <li>비밀번호 정책</li>
+        <li>Undo 보관함</li>
+      </ul>
+    </div>
+    <div style="background:#fdf4ff;border:1px solid #d8b4fe;border-radius:8px;padding:12px;">
+      <div style="font-weight:600;color:#9333ea;margin-bottom:6px;">고급</div>
+      <ul style="margin:0;padding-left:16px;line-height:1.9;color:#7e22ce;">
+        <li>대시보드 위젯</li>
+        <li>댓글/메모</li>
+        <li>출결 확인</li>
+        <li>어드민 로그</li>
+        <li>공지사항 팝업</li>
+        <li>접근성 (aria)</li>
+        <li>모바일 최적화</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<div style="background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:14px;margin-top:8px;">
+  <div style="font-weight:600;color:#16a34a;margin-bottom:6px;">✅ 이 설계로 진행할까요?</div>
+  <p style="margin:0;font-size:13px;color:#166534;">
+    NEIS API (학사일정 + 급식) + 즉시 적용 개선사항을 1차로 구현하고, 이후 중간/고급 기능을 순차적으로 추가합니다. 모든 기능은 기존 Vanilla JS + Supabase 스택을 유지합니다.
+  </p>
+</div>

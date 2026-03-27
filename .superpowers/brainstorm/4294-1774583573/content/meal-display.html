@@ -1,0 +1,68 @@
+<h2>급식 표시 방식 선택</h2>
+<p class="subtitle">시간표 옆에 급식 버튼을 어떻게 배치할까요?</p>
+
+<div class="options">
+  <div class="option" data-choice="a" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>시간대별 인라인 버튼</h3>
+      <p>아침(7:30) / 점심(12:30) / 저녁(18:30) 시간 행 옆에 "🍚 급식보기" 작은 버튼을 인라인으로 배치. 클릭 시 모달로 메뉴 표시</p>
+      <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;padding:10px;margin-top:8px;font-size:13px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:4px 0;border-bottom:1px solid #e2e8f0;">
+          <span>07:30 아침</span>
+          <button style="background:#3b82f6;color:white;border:none;border-radius:4px;padding:2px 8px;font-size:11px;cursor:pointer;">🍚 급식</button>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:4px 0;border-bottom:1px solid #e2e8f0;">
+          <span>1교시 — 수학(김선)</span>
+          <span style="color:#94a3b8;font-size:11px;"></span>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:4px 0;border-bottom:1px solid #e2e8f0;">
+          <span>12:30 점심</span>
+          <button style="background:#3b82f6;color:white;border:none;border-radius:4px;padding:2px 8px;font-size:11px;cursor:pointer;">🍚 급식</button>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:4px 0;">
+          <span>18:30 저녁</span>
+          <button style="background:#3b82f6;color:white;border:none;border-radius:4px;padding:2px 8px;font-size:11px;cursor:pointer;">🍚 급식</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="option" data-choice="b" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>사이드패널 상단 급식 섹션</h3>
+      <p>오른쪽 사이드패널 맨 위에 "오늘의 급식" 접기/펼치기 섹션 추가. 아침/점심/저녁 탭으로 전환. 시간표와 별도 영역으로 분리</p>
+      <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;padding:10px;margin-top:8px;font-size:13px;">
+        <div style="background:#3b82f6;color:white;border-radius:4px;padding:6px 10px;display:flex;justify-content:space-between;">
+          <span style="font-weight:600;">🍽️ 오늘의 급식</span>
+          <span>▼</span>
+        </div>
+        <div style="border:1px solid #e2e8f0;border-top:none;border-radius:0 0 4px 4px;padding:8px;">
+          <div style="display:flex;gap:6px;margin-bottom:8px;">
+            <button style="background:#3b82f6;color:white;border:none;border-radius:4px;padding:2px 10px;font-size:11px;">아침</button>
+            <button style="background:#f1f5f9;color:#64748b;border:1px solid #e2e8f0;border-radius:4px;padding:2px 10px;font-size:11px;">점심</button>
+            <button style="background:#f1f5f9;color:#64748b;border:1px solid #e2e8f0;border-radius:4px;padding:2px 10px;font-size:11px;">저녁</button>
+          </div>
+          <div style="font-size:12px;line-height:1.7;color:#475569;">
+            흑미밥 / 미역국 / 제육볶음<br>
+            시금치나물 / 배추김치 / 요거트
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="option" data-choice="c" onclick="toggleSelect(this)">
+    <div class="letter">C</div>
+    <div class="content">
+      <h3>A + B 조합</h3>
+      <p>시간표에 인라인 버튼도 있고, 사이드패널 상단에도 급식 섹션 표시. 인라인 버튼 클릭 시 해당 끼니 탭으로 스크롤. 가장 접근성 좋음</p>
+      <div style="background:#f0fdf4;border:1px solid #86efac;border-radius:6px;padding:8px;margin-top:8px;font-size:12px;color:#166534;">
+        ✅ 시간표 어디서든 급식 바로 접근 가능<br>
+        ✅ 사이드패널에서도 한눈에 확인<br>
+        ⚠️ 다소 중복될 수 있음
+      </div>
+    </div>
+  </div>
+</div>
