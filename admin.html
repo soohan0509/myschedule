@@ -22,6 +22,8 @@
     .badge-admin { background: #EDE9FE; color: #5B21B6; padding: 2px 8px; border-radius: 999px; font-size: 0.72rem; font-weight: 700; }
     .btn-edit { padding: 4px 12px; background: var(--primary); color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 0.78rem; font-weight: 600; }
     .btn-edit:hover { background: var(--primary-dark); }
+    .btn-delete { padding: 4px 12px; background: var(--danger); color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 0.78rem; font-weight: 600; margin-left: 4px; }
+    .btn-delete:hover { opacity: 0.85; }
     .count-info { font-size: 0.83rem; color: var(--text-muted); margin-bottom: 10px; }
 
     /* 편집 모달 */
@@ -76,6 +78,20 @@
       </thead>
       <tbody id="member-tbody"></tbody>
     </table>
+  </div>
+
+  <!-- 삭제 확인 모달 -->
+  <div class="modal-overlay" id="delete-modal">
+    <div class="modal">
+      <h3>계정 삭제</h3>
+      <p id="delete-confirm-text" style="margin: 12px 0; font-size: 0.9rem;"></p>
+      <p style="font-size: 0.82rem; color: var(--danger); margin-bottom: 16px;">삭제 후 복구할 수 없습니다.</p>
+      <p class="error-msg" id="delete-error"></p>
+      <div class="modal-actions">
+        <button class="btn btn-secondary" id="delete-cancel">취소</button>
+        <button class="btn" style="background:var(--danger);color:white" id="delete-confirm">삭제</button>
+      </div>
+    </div>
   </div>
 
   <!-- 편집 모달 -->
@@ -165,13 +181,20 @@
           <td>${m.name}</td>
           <td>${m.is_admin ? '<span class="badge-admin">어드민</span>' : '-'}</td>
           <td>${date}</td>
-          <td><button class="btn-edit" data-id="${m.id}">수정</button></td>
+          <td>
+            <button class="btn-edit" data-id="${m.id}">수정</button>
+            <button class="btn-delete" data-id="${m.id}" data-name="${m.name}">삭제</button>
+          </td>
         `;
         tbody.appendChild(tr);
       });
 
       tbody.querySelectorAll('.btn-edit').forEach(btn => {
         btn.addEventListener('click', () => openEdit(btn.dataset.id));
+      });
+
+      tbody.querySelectorAll('.btn-delete').forEach(btn => {
+        btn.addEventListener('click', () => openDeleteConfirm(btn.dataset.id, btn.dataset.name));
       });
     }
 
@@ -186,6 +209,46 @@
 
     document.getElementById('filter-class').addEventListener('change', applyFilter);
     document.getElementById('filter-name').addEventListener('input', applyFilter);
+
+    let deleteTargetId = null;
+
+    function openDeleteConfirm(id, name) {
+      deleteTargetId = id;
+      document.getElementById('delete-confirm-text').textContent = `"${name}" 계정을 삭제하시겠습니까?`;
+      document.getElementById('delete-error').classList.remove('show');
+      document.getElementById('delete-modal').classList.add('open');
+    }
+
+    document.getElementById('delete-cancel').addEventListener('click', () => {
+      document.getElementById('delete-modal').classList.remove('open');
+    });
+    document.getElementById('delete-modal').addEventListener('click', e => {
+      if (e.target === document.getElementById('delete-modal'))
+        document.getElementById('delete-modal').classList.remove('open');
+    });
+
+    document.getElementById('delete-confirm').addEventListener('click', async () => {
+      if (!deleteTargetId) return;
+      const errEl = document.getElementById('delete-error');
+      const btn = document.getElementById('delete-confirm');
+      btn.disabled = true;
+      btn.textContent = '삭제 중...';
+
+      const { error } = await supabase.rpc('delete_user_by_admin', { target_id: deleteTargetId });
+
+      btn.disabled = false;
+      btn.textContent = '삭제';
+
+      if (error) {
+        errEl.textContent = '삭제 실패: ' + error.message;
+        errEl.classList.add('show');
+        return;
+      }
+
+      document.getElementById('delete-modal').classList.remove('open');
+      deleteTargetId = null;
+      await loadMembers();
+    });
 
     function openEdit(id) {
       const m = allMembers.find(x => x.id === id);
