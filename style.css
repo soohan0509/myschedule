@@ -290,9 +290,22 @@ body { font-family: 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif; backgrou
 
 /* 반응형 */
 @media (max-width: 768px) {
-  .main-content { flex-direction: column; padding: 16px; }
-  .detail-panel { width: 100%; }
+  .main-content { flex-direction: column; padding: 12px; gap: 16px; }
+  /* 모바일: 당일 시간표(상세 패널)를 캘린더 위에 표시 */
+  .calendar-section { order: 2; }
+  .detail-panel { order: 1; width: 100%; }
   .detail-card { position: static; }
+  .calendar-nav { gap: 6px; }
+  .calendar-nav h2 { font-size: 1rem; }
+  .view-toggle .view-btn { padding: 4px 8px; font-size: 0.75rem; }
+  .today-btn { font-size: 0.72rem; padding: 3px 7px; }
+  .class-tabs { gap: 2px; padding: 8px 12px 0; overflow-x: auto; }
+  .tab { padding: 7px 12px; font-size: 0.82rem; white-space: nowrap; }
+  .week-view-grid { grid-template-columns: repeat(7, 1fr); gap: 3px; }
+  .week-day-header { padding: 5px 2px 4px; }
+  .week-day-name { font-size: 0.62rem; }
+  .week-day-num { font-size: 0.8rem; }
+  .week-event { font-size: 0.6rem; padding: 1px 3px; }
 }
 
 /* NEIS dot */
