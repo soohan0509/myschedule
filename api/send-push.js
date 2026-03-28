@@ -17,7 +17,6 @@ module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Cron-Secret');
   if (req.method === 'OPTIONS') return res.status(200).end();
-  if (req.method !== 'POST') return res.status(405).end();
 
   const { type } = req.query;
 
@@ -35,7 +34,8 @@ module.exports = async function handler(req, res) {
       await handleScheduleAdded(req.body);
 
     } else if (type === 'cron') {
-      if (req.headers['x-cron-secret'] !== process.env.CRON_SECRET) {
+      const secret = req.headers['x-cron-secret'] || req.query.secret;
+      if (secret !== process.env.CRON_SECRET) {
         return res.status(401).json({ error: 'unauthorized' });
       }
       await handleCron();
