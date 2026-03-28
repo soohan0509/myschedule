@@ -60,6 +60,7 @@ async function init() {
   await renderCalendar();
   await loadNotifications();
   showExamNotification();
+  await setupNotificationSettings();
 }
 
 // ─── 시험 D-Day 팝업 알림 ────────────────────────
@@ -1090,6 +1091,18 @@ async function submitSchedule() {
     }
   }
 
+  // 반 전체 일정이면 같은 반 구독자에게 푸시 알림 (fire & forget)
+  if (selectedType === 'class') {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!session) return;
+      fetch('/api/send-push?type=schedule_added', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}` },
+        body: JSON.stringify({ classNum: profile.class_num, title, excludeUserId: profile.id })
+      }).catch(() => {});
+    });
+  }
+
   closeModal();
   showToast('일정이 저장됐습니다.', 'success');
   submitBtn.disabled = false;
@@ -1387,3 +1400,117 @@ function setupTodayBtn() {
 }
 
 init();
+
+// ─── 푸시 알림 설정 ────────────────────────────────
+
+function urlBase64ToUint8Array(base64String) {
+  const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
+  const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+  const raw = atob(base64);
+  return Uint8Array.from([...raw].map(c => c.charCodeAt(0)));
+}
+
+async function subscribeUser() {
+  if (!('serviceWorker' in navigator) || !('PushManager' in window)) return null;
+  const reg = await navigator.serviceWorker.ready;
+  let sub = await reg.pushManager.getSubscription();
+  if (!sub) {
+    sub = await reg.pushManager.subscribe({
+      userVisibleOnly: true,
+      applicationServerKey: urlBase64ToUint8Array(window.__ENV.VAPID_PUBLIC_KEY)
+    });
+  }
+  const { data: { session } } = await supabase.auth.getSession();
+  await fetch('/api/save-subscription', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}` },
+    body: JSON.stringify({ subscription: sub.toJSON() })
+  });
+  return sub;
+}
+
+function updateNotifPermissionUI() {
+  const status = Notification.permission;
+  const btn = document.getElementById('notif-permission-btn');
+  const statusEl = document.getElementById('notif-permission-status');
+  if (status === 'granted') {
+    btn.style.display = 'none';
+    statusEl.textContent = '✓ 알림 활성화됨';
+  } else if (status === 'denied') {
+    btn.style.display = 'none';
+    statusEl.textContent = '알림이 차단됨 — 브라우저 설정에서 허용해주세요.';
+  } else {
+    btn.style.display = '';
+    statusEl.textContent = '';
+  }
+}
+
+async function setupNotificationSettings() {
+  if (!('Notification' in window)) return;
+
+  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+  const isStandalone = window.matchMedia('(display-mode: standalone)').matches || navigator.standalone;
+  if (isIOS && !isStandalone) {
+    document.getElementById('notif-ios-warning').style.display = 'block';
+  }
+
+  updateNotifPermissionUI();
+
+  document.getElementById('notif-permission-btn').addEventListener('click', async () => {
+    const perm = await Notification.requestPermission();
+    if (perm === 'granted') await subscribeUser();
+    updateNotifPermissionUI();
+  });
+
+  const { data: settings } = await supabase
+    .from('notification_settings')
+    .select('*')
+    .eq('user_id', profile.id)
+    .single();
+
+  if (settings) {
+    document.getElementById('notif-schedule-added').checked = settings.schedule_added ?? true;
+    if (settings.day_of_time) {
+      document.getElementById('notif-day-of').checked = true;
+      document.getElementById('notif-day-of-time').value = settings.day_of_time.slice(0, 5);
+    }
+    if (settings.day_before_time) {
+      document.getElementById('notif-day-before').checked = true;
+      document.getElementById('notif-day-before-time').value = settings.day_before_time.slice(0, 5);
+    }
+    if (settings.two_days_before_time) {
+      document.getElementById('notif-two-days-before').checked = true;
+      document.getElementById('notif-two-days-before-time').value = settings.two_days_before_time.slice(0, 5);
+    }
+  }
+
+  document.getElementById('notif-settings-save-btn').addEventListener('click', async () => {
+    const dayOf = document.getElementById('notif-day-of').checked
+      ? (document.getElementById('notif-day-of-time').value || null) : null;
+    const dayBefore = document.getElementById('notif-day-before').checked
+      ? (document.getElementById('notif-day-before-time').value || null) : null;
+    const twoDaysBefore = document.getElementById('notif-two-days-before').checked
+      ? (document.getElementById('notif-two-days-before-time').value || null) : null;
+
+    const { error } = await supabase
+      .from('notification_settings')
+      .upsert({
+        user_id: profile.id,
+        schedule_added: document.getElementById('notif-schedule-added').checked,
+        day_of_time: dayOf,
+        day_before_time: dayBefore,
+        two_days_before_time: twoDaysBefore
+      }, { onConflict: 'user_id' });
+
+    const msgEl = document.getElementById('notif-settings-msg');
+    if (error) {
+      msgEl.textContent = '저장 실패: ' + error.message;
+      msgEl.style.color = 'var(--danger)';
+    } else {
+      msgEl.textContent = '알림 설정이 저장됐습니다.';
+      msgEl.style.color = '#28a745';
+    }
+    msgEl.classList.add('show');
+    setTimeout(() => msgEl.classList.remove('show'), 2000);
+  });
+}
