@@ -83,12 +83,14 @@ function showExamNotification() {
   const notif = document.createElement('div');
   notif.className = 'exam-notif';
   notif.innerHTML = `
-    <button class="exam-notif-close" aria-label="닫기">✕</button>
-    <div class="exam-notif-icon">📝</div>
-    <div class="exam-notif-content">
-      <div class="exam-notif-label">1차 정기 시험</div>
-      <div class="exam-notif-dday">${ddayText}</div>
-      <div class="exam-notif-date">4월 20일 (월)</div>
+    <div class="exam-notif-main">
+      <button class="exam-notif-close" aria-label="닫기">✕</button>
+      <div class="exam-notif-icon">📝</div>
+      <div class="exam-notif-content">
+        <div class="exam-notif-label">1차 정기 시험</div>
+        <div class="exam-notif-dday">${ddayText}</div>
+        <div class="exam-notif-date">4월 20일 (월)</div>
+      </div>
     </div>
     <button class="exam-notif-hide-btn">하루동안 보지 않기</button>
   `;
