@@ -597,7 +597,7 @@ body { font-family: 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif; backgrou
   position: fixed;
   top: 72px;
   right: 16px;
-  width: 220px;
+  width: 270px;
   background: var(--card);
   border: 1px solid var(--border);
   border-radius: 16px;
@@ -636,7 +636,7 @@ body { font-family: 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif; backgrou
 .exam-notif-label { font-size: 0.72rem; font-weight: 600; color: var(--text-muted); margin-bottom: 2px; }
 .exam-notif-dday { font-size: 1.5rem; font-weight: 800; color: var(--primary); line-height: 1.1; }
 .exam-notif-date { font-size: 0.76rem; color: var(--text-muted); margin-top: 3px; }
-.exam-notif-hide-btn { display: block; width: calc(100% + 28px); margin: 0 -14px; padding: 8px 0; background: none; border: none; border-top: 1px solid var(--border); border-radius: 0 0 16px 16px; color: var(--text-muted); font-size: 0.75rem; cursor: pointer; text-align: center; }
+.exam-notif-hide-btn { display: block; width: calc(100% + 28px); margin: 0 -14px; padding: 8px 0; background: none; border: none; border-top: 1px solid var(--border); border-radius: 0 0 16px 16px; color: var(--text-muted); font-size: 0.75rem; cursor: pointer; text-align: center; white-space: nowrap; }
 .exam-notif-hide-btn:hover { background: var(--hover, rgba(0,0,0,0.04)); color: var(--text); }
 .exam-notif-out {
   animation: examNotifOut 0.25s ease-in forwards;
