@@ -1,8 +1,8 @@
 const fs = require('fs');
 const content = `window.__ENV = {
-  SUPABASE_URL: '${process.env.SUPABASE_URL || ''}',
-  SUPABASE_ANON_KEY: '${process.env.SUPABASE_ANON_KEY || ''}',
-  VAPID_PUBLIC_KEY: '${process.env.VAPID_PUBLIC_KEY || ''}'
+  SUPABASE_URL: '${(process.env.SUPABASE_URL || '').trim()}',
+  SUPABASE_ANON_KEY: '${(process.env.SUPABASE_ANON_KEY || '').trim()}',
+  VAPID_PUBLIC_KEY: '${(process.env.VAPID_PUBLIC_KEY || '').trim()}'
 };`;
 fs.writeFileSync('env.js', content);
 console.log('env.js generated');
