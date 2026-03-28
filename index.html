@@ -4,11 +4,27 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>경기북과학고 1학년 일정</title>
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#1a73e8">
+  <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="GBSHS 일정">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <script src="env.js"></script>
-  <div class="auth-container">
+
+  <!-- 자동 로그인 확인 중 로딩 화면 -->
+  <div id="auth-loading" style="position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:#fff;z-index:999">
+    <div style="text-align:center">
+      <div style="width:36px;height:36px;border:3px solid #e2e8f0;border-top-color:#1a73e8;border-radius:50%;animation:spin 0.7s linear infinite;margin:0 auto 12px"></div>
+      <p style="color:#64748b;font-size:0.9rem">로그인 확인 중...</p>
+    </div>
+  </div>
+  <style>@keyframes spin{to{transform:rotate(360deg)}}</style>
+
+  <div class="auth-container" style="display:none" id="auth-container">
     <div class="auth-card">
       <h1>🏫 경기북과학고 1학년</h1>
       <p class="subtitle" id="auth-subtitle">로그인하여 반 일정을 확인하세요</p>
@@ -81,13 +97,19 @@
       </div>
     </div>
   </div>
+  </div>
 
   <script type="module">
     import { supabase } from './app.js';
 
-    // 이미 로그인 시 캘린더로
+    // 세션 확인 → 있으면 즉시 이동, 없으면 로그인 폼 표시
     supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) window.location.href = 'calendar.html';
+      if (session) {
+        window.location.href = 'calendar.html';
+      } else {
+        document.getElementById('auth-loading').style.display = 'none';
+        document.getElementById('auth-container').style.display = '';
+      }
     });
 
     let isLogin = true;
@@ -138,7 +160,7 @@
       if (!classNum) { errEl.textContent = '반을 선택해주세요.'; errEl.classList.add('show'); return; }
       if (seatNum !== parseInt(document.getElementById('signup-seat-confirm').value)) { errEl.textContent = '번호가 일치하지 않습니다.'; errEl.classList.add('show'); return; }
       if (password !== confirm) { errEl.textContent = '비밀번호가 일치하지 않습니다.'; errEl.classList.add('show'); return; }
-      if (password.length < 6) { errEl.textContent = '비밀번호는 6자 이상이어야 합니다.'; errEl.classList.add('show'); return; }
+      if (password.length < 8) { errEl.textContent = '비밀번호는 8자 이상이어야 합니다.'; errEl.classList.add('show'); return; }
 
       const email = `c${classNum}n${seatNum}@gbs.kr`;
       const { data, error } = await supabase.auth.signUp({ email, password });
@@ -164,6 +186,11 @@
 
       window.location.href = 'calendar.html';
     });
+  </script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/service-worker.js');
+    }
   </script>
 </body>
 </html>
