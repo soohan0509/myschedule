@@ -253,15 +253,15 @@ body { font-family: 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif; backgrou
 .modal-actions { display: flex; gap: 8px; margin-top: 18px; }
 
 /* 알림 드롭다운 */
-.notif-dropdown { position: absolute; top: 52px; right: 0; background: var(--card); border: 1px solid var(--border); border-radius: 12px; width: 310px; box-shadow: 0 8px 24px rgba(0,0,0,0.12); z-index: 200; display: none; }
+.notif-dropdown { position: fixed; top: 52px; right: 8px; background: var(--card); border: 1px solid var(--border); border-radius: 12px; width: 310px; max-width: calc(100vw - 16px); box-shadow: 0 8px 24px rgba(0,0,0,0.12); z-index: 200; display: none; max-height: 80vh; overflow-y: auto; }
 .notif-dropdown.open { display: block; }
 .notif-header { padding: 12px 16px; font-weight: 600; font-size: 0.9rem; border-bottom: 1px solid var(--border); }
 .notif-item { padding: 12px 16px; border-bottom: 1px solid var(--border); }
 .notif-item:last-child { border-bottom: none; }
-.notif-text { font-size: 0.83rem; margin-bottom: 8px; line-height: 1.4; }
-.notif-actions { display: flex; gap: 7px; }
-.btn-accept { background: var(--success); color: white; padding: 5px 12px; border: none; border-radius: 6px; cursor: pointer; font-size: 0.78rem; font-weight: 600; }
-.btn-reject { background: var(--danger); color: white; padding: 5px 12px; border: none; border-radius: 6px; cursor: pointer; font-size: 0.78rem; font-weight: 600; }
+.notif-text { font-size: 0.83rem; margin-bottom: 8px; line-height: 1.4; word-break: keep-all; }
+.notif-actions { display: flex; gap: 7px; flex-wrap: wrap; }
+.btn-accept { background: var(--success); color: white; padding: 6px 16px; border: none; border-radius: 6px; cursor: pointer; font-size: 0.82rem; font-weight: 600; flex: 1; }
+.btn-reject { background: var(--danger); color: white; padding: 6px 16px; border: none; border-radius: 6px; cursor: pointer; font-size: 0.82rem; font-weight: 600; flex: 1; }
 .notif-empty { padding: 20px; text-align: center; color: var(--text-muted); font-size: 0.85rem; }
 
 /* 섹션 제목 */
@@ -631,6 +631,8 @@ body { font-family: 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif; backgrou
 .exam-notif-label { font-size: 0.72rem; font-weight: 600; color: var(--text-muted); margin-bottom: 2px; }
 .exam-notif-dday { font-size: 1.5rem; font-weight: 800; color: var(--primary); line-height: 1.1; }
 .exam-notif-date { font-size: 0.76rem; color: var(--text-muted); margin-top: 3px; }
+.exam-notif-hide-btn { display: block; width: 100%; margin-top: 8px; padding: 5px 0; background: none; border: none; border-top: 1px solid var(--border); color: var(--text-muted); font-size: 0.75rem; cursor: pointer; text-align: center; }
+.exam-notif-hide-btn:hover { color: var(--text); }
 .exam-notif-out {
   animation: examNotifOut 0.25s ease-in forwards;
 }

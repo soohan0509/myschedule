@@ -74,6 +74,10 @@ function showExamNotification() {
   // 시험 지난 후엔 표시 안 함
   if (diff < 0) return;
 
+  // 오늘 하루동안 보지 않기 설정 확인
+  const todayStr = today.toISOString().slice(0, 10);
+  if (localStorage.getItem('exam-notif-hide') === todayStr) return;
+
   const ddayText = diff === 0 ? 'D-Day! 🔥' : `D-${diff}`;
 
   const notif = document.createElement('div');
@@ -86,6 +90,7 @@ function showExamNotification() {
       <div class="exam-notif-dday">${ddayText}</div>
       <div class="exam-notif-date">4월 20일 (월)</div>
     </div>
+    <button class="exam-notif-hide-btn">하루동안 보지 않기</button>
   `;
   document.body.appendChild(notif);
 
@@ -95,6 +100,10 @@ function showExamNotification() {
   }
 
   notif.querySelector('.exam-notif-close').addEventListener('click', dismiss);
+  notif.querySelector('.exam-notif-hide-btn').addEventListener('click', () => {
+    localStorage.setItem('exam-notif-hide', todayStr);
+    dismiss();
+  });
 
   // 스와이프 업으로 닫기
   let startY = 0;
