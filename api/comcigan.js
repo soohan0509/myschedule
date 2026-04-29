@@ -1,9 +1,6 @@
 const Timetable = require('comcigan-parser');
 
 const SCHOOL_CODE = 12045;
-let cache = null;
-let cacheAt = 0;
-const CACHE_TTL = 6 * 60 * 60 * 1000; // 6시간
 
 module.exports = async function handler(req, res) {
   const classNum = parseInt(req.query.class);
@@ -14,15 +11,12 @@ module.exports = async function handler(req, res) {
   }
 
   try {
-    if (!cache || Date.now() - cacheAt > CACHE_TTL) {
-      const t = new Timetable();
-      await t.init();
-      t.setSchool(SCHOOL_CODE);
-      cache = await t.getTimetable();
-      cacheAt = Date.now();
-    }
+    const t = new Timetable();
+    await t.init();
+    t.setSchool(SCHOOL_CODE);
+    const timetable = await t.getTimetable();
 
-    const dayData = (cache[1]?.[classNum]?.[day]) || [];
+    const dayData = (timetable[1]?.[classNum]?.[day]) || [];
     const result = {};
     dayData.forEach(item => {
       if (item && item.subject) {
@@ -30,11 +24,9 @@ module.exports = async function handler(req, res) {
       }
     });
 
-    res.setHeader('Cache-Control', 's-maxage=21600');
+    res.setHeader('Cache-Control', 'no-store');
     res.json(result);
   } catch (e) {
-    cache = null;
-    cacheAt = 0;
     res.status(500).json({ error: e.message });
   }
 };

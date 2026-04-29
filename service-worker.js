@@ -1,4 +1,4 @@
-const CACHE_NAME = 'gbshs-schedule-v2';
+const CACHE_NAME = 'gbshs-schedule-v3';
 const STATIC_ASSETS = [
   '/',
   '/index.html',
@@ -30,8 +30,18 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
-  // Supabase API 요청은 캐시하지 않음
   if (event.request.url.includes('supabase.co')) return;
+
+  const url = new URL(event.request.url);
+  const isHtml = url.pathname.endsWith('.html') || url.pathname === '/';
+  const isApi = url.pathname.startsWith('/api/');
+
+  if (isHtml || isApi) {
+    event.respondWith(
+      fetch(event.request).catch(() => caches.match(event.request))
+    );
+    return;
+  }
 
   event.respondWith(
     caches.match(event.request).then((cached) => {
