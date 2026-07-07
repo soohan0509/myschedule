@@ -1,4 +1,4 @@
-const CACHE_NAME = 'gbshs-schedule-v4';
+const CACHE_NAME = 'gbshs-schedule-v5';
 const STATIC_ASSETS = [
   '/',
   '/index.html',
@@ -53,36 +53,5 @@ self.addEventListener('fetch', (event) => {
         return response;
       });
     }).catch(() => caches.match('/index.html'))
-  );
-});
-
-// ─── Push 수신 ─────────────────────────────────────
-self.addEventListener('push', (event) => {
-  let data = { title: '경기북과학고 일정', body: '새 알림이 있습니다.', icon: '/icons/icon-192.png', url: '/calendar.html' };
-  try { data = { ...data, ...event.data.json() }; } catch {}
-
-  event.waitUntil(
-    self.registration.showNotification(data.title, {
-      body: data.body,
-      icon: data.icon,
-      badge: '/icons/icon-192.png',
-      data: { url: data.url }
-    })
-  );
-});
-
-// 알림 클릭 시 앱 열기
-self.addEventListener('notificationclick', (event) => {
-  event.notification.close();
-  const url = event.notification.data?.url || '/calendar.html';
-  event.waitUntil(
-    clients.matchAll({ type: 'window', includeUncontrolled: true }).then((windowClients) => {
-      for (const client of windowClients) {
-        if (client.url.includes(self.location.origin) && 'focus' in client) {
-          return client.focus();
-        }
-      }
-      return clients.openWindow(url);
-    })
   );
 });

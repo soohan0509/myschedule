@@ -1,6 +1,5 @@
 {
   "dependencies": {
-    "comcigan-parser": "^1.0.0",
-    "web-push": "^3.6.7"
+    "comcigan-parser": "^1.0.0"
   }
 }
