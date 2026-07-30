@@ -578,14 +578,17 @@ async function showDateDetail(date) {
     <div class="skeleton skeleton-line short"></div>
   `;
 
-  const [subjectMap, { data: classSchedules }, { data: memberRows }, neisForMonth] = await Promise.all([
-    fetchTimetable(currentClass, date),
-    supabase.from('schedules').select('*, attachments(*)').eq('class_num', currentClass).eq('date', date),
-    supabase.from('group_members').select('schedule_id').eq('user_id', profile.id).eq('status', 'accepted'),
-    fetchNeisSchedule(parseInt(date.slice(0, 4)), parseInt(date.slice(5, 7)) - 1)
-  ]);
+  const neisForMonthPre = await fetchNeisSchedule(parseInt(date.slice(0, 4)), parseInt(date.slice(5, 7)) - 1);
   const neisDateStr = date.replace(/-/g, '');
-  const neisDayEvents = (neisForMonth || []).filter(s => s.date === neisDateStr);
+  const neisDayEvents = (neisForMonthPre || []).filter(s => s.date === neisDateStr);
+  const neisDayInfo = (neisForMonthPre || []).find(s => s.date === neisDateStr);
+  const isSchoolDay = neisDayInfo ? neisDayInfo.isSchoolDay : true;
+
+  const [subjectMap, { data: classSchedules }, { data: memberRows }] = await Promise.all([
+    fetchTimetable(currentClass, date, isSchoolDay),
+    supabase.from('schedules').select('*, attachments(*)').eq('class_num', currentClass).eq('date', date),
+    supabase.from('group_members').select('schedule_id').eq('user_id', profile.id).eq('status', 'accepted')
+  ]);
 
   // 수락한 그룹 일정 중 다른 반 것도 포함
   let schedules = classSchedules || [];
@@ -610,6 +613,14 @@ async function showDateDetail(date) {
       ${neisDayEvents.map(e => `<div style="font-size:0.88rem;color:#92400E;">${escapeHtml(e.name)}</div>`).join('')}
     `;
     panel.appendChild(neisSection);
+  }
+
+  // 방학/휴업일 안내
+  if (!isSchoolDay) {
+    const vacationBanner = document.createElement('div');
+    vacationBanner.style.cssText = 'background:#EEF2FF;border:1px solid #6366F1;border-radius:8px;padding:10px 12px;margin-bottom:12px;font-size:0.88rem;color:#4338CA;font-weight:600;';
+    vacationBanner.textContent = '🏖️ 방학/휴업일이라 시간표가 표시되지 않습니다.';
+    panel.appendChild(vacationBanner);
   }
 
   // 예외 날짜 적용해서 오늘 보이면 안 되는 루틴 필터링
@@ -639,7 +650,8 @@ async function showDateDetail(date) {
   const ttFrag = renderTimetable(
     subjectMap, schedules || [], visibleRoutines, date, currentClass, profile.class_num,
     (slot, label, time) => openModal(date, slot, label),
-    (mealDate, mealCode) => showMealModal(mealDate, mealCode)
+    (mealDate, mealCode) => showMealModal(mealDate, mealCode),
+    isSchoolDay
   );
   panel.appendChild(ttFrag);
 

@@ -37,7 +37,7 @@ module.exports = async function handler(req, res) {
         `&AA_FROM_YMD=${from}&AA_TO_YMD=${to}`
       );
       const rows = data?.SchoolSchedule?.[1]?.row || [];
-      const result = rows.map(r => ({ date: r.AA_YMD, name: r.EVENT_NM }));
+      const result = rows.map(r => ({ date: r.AA_YMD, name: r.EVENT_NM, isSchoolDay: r.SBTR_DD_SC_NM === '수업일' }));
       scheduleCache.set(month, { data: result, ts: Date.now() });
       res.setHeader('Cache-Control', 's-maxage=86400');
       return res.json(result);

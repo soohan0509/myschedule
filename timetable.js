@@ -31,9 +31,9 @@ export function getSlotsForDate(date) {
   return ALL_SLOTS;
 }
 
-export async function fetchTimetable(classNum, date) {
+export async function fetchTimetable(classNum, date, isSchoolDay = true) {
   const jsDay = new Date(date + 'T00:00:00').getDay(); // 0=일, 6=토
-  if (jsDay === 0 || jsDay === 6) return {};
+  if (jsDay === 0 || jsDay === 6 || !isSchoolDay) return {};
   const comciganDay = jsDay - 1; // 0=월, 1=화, 2=수, 3=목, 4=금
   try {
     const res = await fetch(`/api/comcigan?class=${classNum}&day=${comciganDay}`);
@@ -76,10 +76,10 @@ function getSlotStatus(startStr, endStr, isToday, isPast) {
 
 const MEAL_CODE_MAP = { '아침식사': 1, '점심식사': 2, '저녁식사': 3 };
 
-export function renderTimetable(subjectMap, schedules, routines, date, classNum, myClassNum, onSlotClick, onMealClick) {
+export function renderTimetable(subjectMap, schedules, routines, date, classNum, myClassNum, onSlotClick, onMealClick, isSchoolDay = true) {
   const container = document.createDocumentFragment();
   const isMyClass = classNum === myClassNum;
-  const slots = getSlotsForDate(date);
+  const slots = isSchoolDay ? getSlotsForDate(date) : [];
   const _now = new Date();
   const todayStr = `${_now.getFullYear()}-${String(_now.getMonth()+1).padStart(2,'0')}-${String(_now.getDate()).padStart(2,'0')}`;
   const isToday = date === todayStr;
