@@ -615,8 +615,10 @@ async function showDateDetail(date) {
     panel.appendChild(neisSection);
   }
 
-  // 방학/휴업일 안내
-  if (!isSchoolDay) {
+  // 방학/휴업일 안내 (주말은 굳이 안내하지 않음)
+  const dow = new Date(date + 'T00:00:00').getDay();
+  const isWeekend = dow === 0 || dow === 6;
+  if (!isSchoolDay && !isWeekend) {
     const vacationBanner = document.createElement('div');
     vacationBanner.style.cssText = 'background:#EEF2FF;border:1px solid #6366F1;border-radius:8px;padding:10px 12px;margin-bottom:12px;font-size:0.88rem;color:#4338CA;font-weight:600;';
     vacationBanner.textContent = '🏖️ 방학/휴업일이라 시간표가 표시되지 않습니다.';
